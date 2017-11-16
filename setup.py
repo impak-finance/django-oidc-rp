@@ -7,7 +7,7 @@ from os.path import join
 from setuptools import find_packages
 from setuptools import setup
 
-import machina
+import oidc_rp
 
 
 def read_relative_file(filename):
@@ -17,8 +17,8 @@ def read_relative_file(filename):
 
 
 setup(
-    name='impak-django-oidc-client',
-    version=machina.__version__,
+    name='impak-django-oidc-rp',
+    version=oidc_rp.__version__,
     author='impak Finance',
     author_email='morgan.aubert@zoho.com',
     packages=find_packages(),
@@ -30,7 +30,9 @@ setup(
     keywords='django openidconnect oidc client rp authentication auth',
     zip_safe=False,
     install_requires=[
-        'django>=1.8',
+        'django>=1.11',
+        'pyjwkest>=1.4',
+        'requests>2.0',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -9,6 +9,8 @@
 
 """
 
+from django.contrib import auth
+from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.crypto import get_random_string
@@ -67,6 +69,40 @@ class OIDCAuthCallbackView(View):
     application level if applicable.
 
     """
+
+    http_method_names = ['get', ]
+
+    def get(self, request):
+        """ Processes GET requests. """
+        callback_params = request.GET
+
+        # Retrieve the state value that was previously generated. No state means that we cannot
+        # authenticate the user (so a failure should be returned).
+        state = request.session.get('oidc_auth_state', None)
+
+        # Retrieve the nonce that was previously generated and remove it from the current session.
+        # If no nonce is available (while the USE_NONCE setting is set to True) this means that the
+        # authentication cannot be performed and so we have redirect the user to a failure URL.
+        nonce = request.session.pop('oidc_auth_nonce', None)
+
+        # NOTE: a redirect to the failure page should be return if some required GET parameters are
+        # missing or if no state can be retrieved from the current session.
+
+        if ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and \
+                ('code' in callback_params and 'state' in callback_params) and state:
+            # Ensures that the passed state values is the same as the one that was previously
+            # generated when forging the authorization request. This is necessary to mitigate
+            # Cross-Site Request Forgery (CSRF, XSRF).
+            if callback_params['state'] != state:
+                raise SuspiciousOperation('Invalid OpenID Connect callback state value')
+
+            # Authenticates the end-user.
+            user = auth.authenticate(nonce=nonce, request=request)
+            if user and user.is_active:
+                auth.login(self.request, user)
+                return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
+
+        return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
 
 
 class OIDCEndSessionView(View):

@@ -12,13 +12,15 @@ from django.conf import settings
 
 
 # The 'PROVIDER_ENDPOINT' setting defines the top-level endpoint under which all OIDC-specific
-# endpoints are available (eg. 'authorize', 'token', 'userinfo'). These specific endpoints can be
-# explicitely specified if necessary.
+# endpoints are available (eg. 'authorize', 'token', 'userinfo', ...). These specific endpoints can
+# be explicitely specified if necessary.
 PROVIDER_ENDPOINT = getattr(settings, 'OIDC_RP_PROVIDER_ENDPOINT', 'https://example.com/a/')
 PROVIDER_AUTHORIZATION_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_AUTHORIZATION_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'authorize'))
 PROVIDER_TOKEN_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_TOKEN_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'token'))
+PROVIDER_JWKS_ENDPOINT = getattr(
+    settings, 'OIDC_RP_PROVIDER_JWKS_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'jwks'))
 PROVIDER_USERINFO_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_USERINFO_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'userinfo'))
 
@@ -42,3 +44,12 @@ USE_NONCE = getattr(settings, 'OIDC_RP_USE_NONCE', True)
 # The 'NONCE_LENGTH' setting defines the length of the nonce used to mitigate replay attacks when
 # used through the authentication request to the ID token.
 NONCE_LENGTH = getattr(settings, 'OIDC_RP_NONCE_LENGTH', 32)
+
+# The 'AUTHENTICATION_REDIRECT_URI' defines the URI that should be used to redirect the end-user
+# after a successful authentication performed by the OIDC provider.
+AUTHENTICATION_REDIRECT_URI = getattr(settings, 'OIDC_RP_AUTHENTICATION_REDIRECT_URI', '/')
+
+# The 'AUTHENTICATION_FAILURE_REDIRECT_URI' defines the URI that should be used to redirect the
+# end-user after a failed authentication.
+AUTHENTICATION_FAILURE_REDIRECT_URI = getattr(
+    settings, 'OIDC_RP_AUTHENTICATION_FAILURE_REDIRECT_URI', '/')
