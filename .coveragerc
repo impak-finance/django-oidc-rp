@@ -1,0 +1,10 @@
+[report]
+exclude_lines =
+    pragma: no cover
+    def __str__
+    def __repr__
+    def south_field_triple
+    raise NotImplementedError
+omit =
+    *compat*
+    *migrations*
