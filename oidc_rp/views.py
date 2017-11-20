@@ -123,12 +123,12 @@ class OIDCEndSessionView(View):
 
     def post(self, request):
         """ Processes POST requests. """
-        logout_url = self.provider_end_session_url \
-            if oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT \
-            else (settings.LOGOUT_REDIRECT_URL or '/')
+        logout_url = settings.LOGOUT_REDIRECT_URL or '/'
 
         # Log out the current user.
         if request.user.is_authenticated:
+            logout_url = self.provider_end_session_url \
+                if oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT else logout_url
             auth.logout(request)
 
         # Redirects the user to the appropriate URL.

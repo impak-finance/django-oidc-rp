@@ -93,3 +93,7 @@ ENV/
 # Ideas
 /.idea/
 .idea/vcs.xml
+
+# Test data
+tests/_testdata/media/
+tests/_testdata/static/

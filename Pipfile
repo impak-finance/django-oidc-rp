@@ -8,6 +8,11 @@ name = "pypi"
 [dev-packages]
 
 pytest = "*"
+pytest-django = "*"
+pytest-pythonpath = "*"
+pytest-spec = "*"
+pytest-sugar = "*"
+pytest-cov = "*"
 
 
 [packages]
