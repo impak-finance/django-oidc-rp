@@ -9,10 +9,11 @@
 
 """
 
+from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, QueryDict
 from django.utils.crypto import get_random_string
 from django.utils.http import urlencode
 from django.views.generic import View
@@ -113,3 +114,32 @@ class OIDCEndSessionView(View):
     applicable.
 
     """
+
+    http_method_names = ['get', 'post', ]
+
+    def get(self, request):
+        """ Processes GET requests. """
+        return self.post(request)
+
+    def post(self, request):
+        """ Processes POST requests. """
+        logout_url = self.provider_end_session_url \
+            if oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT \
+            else (settings.LOGOUT_REDIRECT_URL or '/')
+
+        # Log out the current user.
+        if request.user.is_authenticated:
+            auth.logout(request)
+
+        # Redirects the user to the appropriate URL.
+        return HttpResponseRedirect(logout_url)
+
+    @property
+    def provider_end_session_url(self):
+        """ Returns the end-session URL. """
+        q = QueryDict(mutable=True)
+        q[oidc_rp_settings.PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER] = \
+            self.request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL or '/')
+        q[oidc_rp_settings.PROVIDER_END_SESSION_ID_TOKEN_PARAMETER] = \
+            self.request.session['oidc_auth_id_token']
+        return '{}?{}'.format(oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT, q.urlencode())

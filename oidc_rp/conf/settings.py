@@ -23,6 +23,18 @@ PROVIDER_JWKS_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_JWKS_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'jwks'))
 PROVIDER_USERINFO_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_USERINFO_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'userinfo'))
+PROVIDER_END_SESSION_ENDPOINT = getattr(
+    settings, 'OIDC_RP_PROVIDER_END_SESSION_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'end-session'))
+
+# The 'PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER' setting defines which URI should be passed to
+# the end-session endpoint of the OpenID Connect provider in order to redirect the end-user back to
+# the client application after a logout operation. The 'PROVIDER_END_SESSION_ID_TOKEN_PARAMETER'
+# defines the name of the GET parameter used to pass the ID token to the provider's endpoint as a
+# hint about the end-user's current session with the client.
+PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER = getattr(
+    settings, 'OIDC_RP_PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER', 'post_logout_redirect_uri')
+PROVIDER_END_SESSION_ID_TOKEN_PARAMETER = getattr(
+    settings, 'OIDC_RP_PROVIDER_END_SESSION_ID_TOKEN_PARAMETER', 'id_token_hint')
 
 # The signature algorithm used by the OpenID Connect Provider to sign ID tokens. The value should be
 # 'HS256' or 'RS256'.
