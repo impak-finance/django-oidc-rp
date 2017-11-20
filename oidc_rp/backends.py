@@ -68,12 +68,17 @@ class OIDCAuthBackend(ModelBackend):
         token_response_data = token_response.json()
 
         # Validates the token.
-        id_token = self.validate_and_return_id_token(token_response_data.get('id_token'), nonce)
+        raw_id_token = token_response_data.get('id_token')
+        id_token = self.validate_and_return_id_token(raw_id_token, nonce)
         if id_token is None:
             return
 
         # Retrieves the access token.
         access_token = token_response_data.get('access_token')
+
+        # Stores the ID token and the related access token in the session.
+        request.session['oidc_auth_id_token'] = raw_id_token
+        request.session['oidc_auth_access_token'] = access_token
 
         # Fetches the user information from the userinfo endpoint provided by the OP.
         userinfo_response = requests.get(
