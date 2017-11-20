@@ -203,6 +203,8 @@ class TestOIDCAuthCallbackView:
 @pytest.mark.django_db
 class TestOIDCEndSessionView:
     @unittest.mock.patch('django.contrib.auth.logout')
+    @unittest.mock.patch('oidc_rp.conf.settings.PROVIDER_END_SESSION_ENDPOINT',
+                         'http://example.com/a/end-session')
     def test_can_log_out_a_user_from_the_application_and_the_authorization_server(
             self, mocked_logout, client):
         User.objects.create_user('foo', password='insecure')
@@ -220,7 +222,6 @@ class TestOIDCEndSessionView:
         assert mocked_logout.call_count == 1
 
     @unittest.mock.patch('django.contrib.auth.logout')
-    @unittest.mock.patch('oidc_rp.conf.settings.PROVIDER_END_SESSION_ENDPOINT', None)
     @override_settings(LOGOUT_REDIRECT_URL='/logout')
     def test_can_log_out_a_user_from_the_application_without_end_session_endpoint(
             self, mocked_logout, client):
