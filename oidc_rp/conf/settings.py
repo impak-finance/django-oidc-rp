@@ -24,6 +24,11 @@ PROVIDER_JWKS_ENDPOINT = getattr(
 PROVIDER_USERINFO_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_USERINFO_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'userinfo'))
 
+# The signature algorithm used by the OpenID Connect Provider to sign ID tokens. The value should be
+# 'HS256' or 'RS256'.
+PROVIDER_SIGNATURE_ALG = getattr(settings, 'OIDC_RP_PROVIDER_SIGNATURE_ALG', 'HS256')
+PROVIDER_SIGNATURE_KEY = getattr(settings, 'OIDC_RP_PROVIDER_SIGNATURE_KEY', None)
+
 # The 'CLIENT_ID' and 'CLIENT_SECRET' settings define the client_id / client_secret values provided
 # by the OpenID Connect provider.
 CLIENT_ID = getattr(settings, 'OIDC_RP_CLIENT_ID', None)

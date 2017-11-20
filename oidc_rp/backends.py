@@ -84,7 +84,6 @@ class OIDCAuthBackend(ModelBackend):
 
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
         users = list(filter_users_from_claims(userinfo_response_data))
-        print(users, userinfo_response_data)
 
         if len(users) == 1:
             return users[0]
@@ -110,8 +109,9 @@ class OIDCAuthBackend(ModelBackend):
 
     def validate_and_return_id_token(self, jws, nonce=None):
         """ Validates the id_token according to the OpenID Connect specification. """
-        # TODO: add support for RS256.
-        shared_key = oidc_rp_settings.CLIENT_SECRET
+        shared_key = oidc_rp_settings.CLIENT_SECRET \
+            if oidc_rp_settings.PROVIDER_SIGNATURE_ALG == 'HS256' \
+            else oidc_rp_settings.PROVIDER_SIGNATURE_KEY  # RS256
 
         try:
             # Decodes the JSON Web Token and raise an error if the signature is invalid.
