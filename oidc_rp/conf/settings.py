@@ -23,8 +23,7 @@ PROVIDER_JWKS_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_JWKS_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'jwks'))
 PROVIDER_USERINFO_ENDPOINT = getattr(
     settings, 'OIDC_RP_PROVIDER_USERINFO_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'userinfo'))
-PROVIDER_END_SESSION_ENDPOINT = getattr(
-    settings, 'OIDC_RP_PROVIDER_END_SESSION_ENDPOINT', urljoin(PROVIDER_ENDPOINT, 'end-session'))
+PROVIDER_END_SESSION_ENDPOINT = getattr(settings, 'OIDC_RP_PROVIDER_END_SESSION_ENDPOINT', None)
 
 # The 'PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER' setting defines which URI should be passed to
 # the end-session endpoint of the OpenID Connect provider in order to redirect the end-user back to
