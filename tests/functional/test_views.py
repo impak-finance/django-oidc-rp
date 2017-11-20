@@ -1,5 +1,5 @@
-from urllib.parse import parse_qs, urlparse
 import unittest.mock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.contrib.auth.models import User

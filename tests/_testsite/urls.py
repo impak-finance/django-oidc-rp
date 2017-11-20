@@ -9,9 +9,6 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 
-js_info_dict = {
-    'packages': ('base', ),
-}
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
