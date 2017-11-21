@@ -153,9 +153,8 @@ class OIDCAuthBackend(ModelBackend):
         if 'nbf' in id_token and utc_timestamp < id_token['nbf']:
             raise SuspiciousOperation('Incorrect id_token: nbf')
 
-        # Verifies that the token was issued in the last 10 minutes.
-        # TODO: add a setting for the ID_TOKEN_MAX_AGE value???
-        if utc_timestamp > id_token['iat'] + 600:
+        # Verifies that the token was issued in the allowed timeframe.
+        if utc_timestamp > id_token['iat'] + oidc_rp_settings.ID_TOKEN_MAX_AGE:
             raise SuspiciousOperation('Incorrect id_token: iat')
 
         # Validate the nonce to ensure the request was not modified if applicable.

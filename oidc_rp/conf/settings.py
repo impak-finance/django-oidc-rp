@@ -61,6 +61,10 @@ USE_NONCE = getattr(settings, 'OIDC_RP_USE_NONCE', True)
 # used through the authentication request to the ID token.
 NONCE_LENGTH = getattr(settings, 'OIDC_RP_NONCE_LENGTH', 32)
 
+# The 'ID_TOKEN_MAX_AGE' setting defines the amount of time an id_token should be considered a
+# valid token.
+ID_TOKEN_MAX_AGE = getattr(settings, 'OIDC_RP_ID_TOKEN_MAX_AGE', 600)
+
 # The 'AUTHENTICATION_REDIRECT_URI' defines the URI that should be used to redirect the end-user
 # after a successful authentication performed by the OIDC provider.
 AUTHENTICATION_REDIRECT_URI = getattr(settings, 'OIDC_RP_AUTHENTICATION_REDIRECT_URI', '/')
