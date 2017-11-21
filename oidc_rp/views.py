@@ -9,6 +9,8 @@
 
 """
 
+import time
+
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
@@ -101,6 +103,11 @@ class OIDCAuthCallbackView(View):
             user = auth.authenticate(nonce=nonce, request=request)
             if user and user.is_active:
                 auth.login(self.request, user)
+                # Stores an expiration timestamp in the user's session. This value will be used if
+                # the project is configured to periodically refresh user's token.
+                self.request.session['oidc_auth_id_token_exp_timestamp'] = \
+                    time.time() + oidc_rp_settings.ID_TOKEN_MAX_AGE
+
                 return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
 
         return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
