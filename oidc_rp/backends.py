@@ -110,4 +110,6 @@ def create_user_from_claims(claims):
     if not email:
         return None
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(email)).digest()).rstrip(b'=')
-    return get_user_model().objects.create_user(smart_text(username), email)
+    return get_user_model().objects.create_user(
+        smart_text(username), email, first_name=claims.get('given_name'),
+        last_name=claims.get('family_name'))
