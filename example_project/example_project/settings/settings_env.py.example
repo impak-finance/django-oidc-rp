@@ -1,0 +1,4 @@
+OIDC_RP_PROVIDER_ENDPOINT = 'https://example.com/a/'
+OIDC_RP_CLIENT_ID = 'NOTSET'
+OIDC_RP_CLIENT_SECRET = 'NOTSET'
+OIDC_RP_SCOPES = 'openid email profile'

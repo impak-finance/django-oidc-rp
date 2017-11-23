@@ -97,3 +97,6 @@ ENV/
 # Test data
 tests/_testdata/media/
 tests/_testdata/static/
+
+# Env settings
+settings_env.py

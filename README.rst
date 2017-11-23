@@ -22,7 +22,7 @@ Just run:
 
 ::
 
-    pip install impak-django-oidc-rp
+    $ pip install impak-django-oidc-rp
 
 Once installed you just need to add ``oidc_rp`` to ``INSTALLED_APPS`` in your project's settings
 module:
