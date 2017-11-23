@@ -36,7 +36,7 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'oidc_end_session' %}">{% trans "Log out" %}</a></li>
           {% else %}
           <li class="nav-item"><a class="nav-link" href="{% url 'oidc_auth_request' %}">{% trans "Sign in" %}</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">{% trans "Sign up" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'signup' %}">{% trans "Sign up" %}</a></li>
           {% endif %}
         </ul>
       </div>
