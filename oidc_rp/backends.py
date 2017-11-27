@@ -15,9 +15,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
+from django.db import transaction
 from django.utils.encoding import force_bytes, smart_text
 
 from .conf import settings as oidc_rp_settings
+from .models import OIDCUser
 from .utils import validate_and_return_id_token
 
 
@@ -85,31 +87,29 @@ class OIDCAuthBackend(ModelBackend):
         userinfo_response.raise_for_status()
         userinfo_response_data = userinfo_response.json()
 
+        # The e-mail address is mandatory for most applications so we return immediately if we
+        # cannot find it in the user's claims.
+        if 'email' not in userinfo_response_data:
+            return
+
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
-        users = list(filter_users_from_claims(userinfo_response_data))
-
-        if len(users) == 1:
-            return users[0]
-        elif len(users) > 1:
-            # In the case where two users with the same identifier were found we cannot choose which
-            # one to authenticate.
-            return None
+        try:
+            oidc_user = OIDCUser.objects.select_related('user').get(
+                sub=userinfo_response_data.get('sub'))
+        except OIDCUser.DoesNotExist:
+            oidc_user = create_oidc_user_from_claims(userinfo_response_data)
         else:
-            # Otherwise we create a local user for our authenticated user.
-            return create_user_from_claims(userinfo_response_data)
+            oidc_user.userinfo = userinfo_response_data
+            oidc_user.save()
+        return oidc_user.user
 
 
-def filter_users_from_claims(claims):
-    """ Returns a queryset of users given a dictionary of claims extracted from an id_token. """
-    return get_user_model().objects.filter(email__iexact=claims.get('email'))
-
-
-def create_user_from_claims(claims):
-    """ Creates a user using the claims extracted from an id_token. """
-    email = claims.get('email')
-    if not email:
-        return None
-    username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(email)).digest()).rstrip(b'=')
-    return get_user_model().objects.create_user(
-        smart_text(username), email, first_name=claims.get('given_name'),
-        last_name=claims.get('family_name'))
+@transaction.atomic
+def create_oidc_user_from_claims(claims):
+    """ Creates an ``OIDCUser`` instance using the claims extracted from an id_token. """
+    sub = claims['sub']
+    email = claims['email']
+    username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
+    user = get_user_model().objects.create_user(smart_text(username), email)
+    oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
+    return oidc_user

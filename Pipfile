@@ -20,5 +20,6 @@ isort = "*"
 [packages]
 
 django = "*"
+jsonfield = "*"
 pyjwkest = "*"
 requests = "*"

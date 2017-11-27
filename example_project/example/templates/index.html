@@ -7,7 +7,7 @@
   <div class="col-md-12">
     <div class="jumbotron">
       <div class="container">
-        <h1 class="display-4">Hello {{ request.user.first_name }}!</h1>
+        <h1 class="display-4">Hello {{ request.user.oidc_user.userinfo.given_name }}!</h1>
         <p class="lead">{% trans "Your e-mail address is:" %} <strong>{{ request.user.email }}</strong></p>
       </div>
     </div>
