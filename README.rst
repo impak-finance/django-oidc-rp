@@ -20,7 +20,7 @@ Installation
 
 Just run:
 
-::
+.. code-block:: shell
 
     $ pip install impak-django-oidc-rp
 
@@ -34,7 +34,13 @@ module:
         'oidc_rp',
     )
 
-Then add the ``oidc_rp.backends.OIDCAuthBackend`` to your project's authentication backends:
+Then install the models:
+
+.. code-block:: shell
+
+    $ python manage.py migrate oidc_rp
+
+You can now add the ``oidc_rp.backends.OIDCAuthBackend`` to your project's authentication backends:
 
 .. code-block:: python
 
@@ -43,7 +49,16 @@ Then add the ``oidc_rp.backends.OIDCAuthBackend`` to your project's authenticati
         'oidc_rp.backends.OIDCAuthBackend',
     )
 
-Of course at this point a client should've been configured in the identity provider you're using.
+And the ``oidc_rp.middleware.OIDCRefreshIDTokenMiddleware`` to your ``MIDDLEWARE`` setting:
+
+.. code-block:: python
+
+    MIDDLEWARE = (
+        # other middlewares
+        'oidc_rp.middleware.OIDCRefreshIDTokenMiddleware',
+    )
+
+Of course at this point a client should've been configured on the identity provider you're using.
 Use the values provided by your OpenID Connect provider (OP) to configure the following settings:
 
 .. code-block:: python
