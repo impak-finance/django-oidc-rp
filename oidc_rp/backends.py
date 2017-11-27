@@ -38,7 +38,7 @@ class OIDCAuthBackend(ModelBackend):
         """ Authenticates users in case of the OpenID Connect Authorization code flow. """
         # NOTE: the request object is mandatory to perform the authentication using an authorization
         # code provided by the OIDC supplier.
-        if nonce is None or request is None:
+        if (nonce is None and oidc_rp_settings.USE_NONCE) or request is None:
             return
 
         # Fetches required GET parameters from the HTTP request object.

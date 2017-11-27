@@ -15,6 +15,7 @@ pytest-sugar = "*"
 pytest-cov = "*"
 "flake8" = "*"
 isort = "*"
+httpretty = "*"
 
 
 [packages]
