@@ -41,7 +41,7 @@ class OIDCRefreshIDTokenMiddleware:
         id_token_exp_timestamp = request.session.get('oidc_auth_id_token_exp_timestamp', None)
         now_timestamp = time.time()
         # Returns immediatelly if the token is still valid.
-        if id_token_exp_timestamp > now_timestamp:
+        if id_token_exp_timestamp is not None and id_token_exp_timestamp > now_timestamp:
             return
 
         # Prepares the token payload that will be used to request a new token from the token
