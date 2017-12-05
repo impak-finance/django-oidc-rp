@@ -1,8 +1,8 @@
-__version__ = '0.1.0.dev'
+__version__ = '0.1.0'
 
 # Deploying a new version:
 # 1. remove the ".dev" from the current version number
-# 2. create a new commit named (eg. "Prepared 0.1.1 version")
+# 2. create a new commit (eg. "Prepared 0.1.1 release")
 # 3. run "git tag x.y.z" (eg. "git tag 0.1.1")
 # 4. run "python setup.py sdist bdist_wheel upload"
 # 5. bump the version (increment the version and append a ".dev" to it). eg. "0.1.2.dev"
