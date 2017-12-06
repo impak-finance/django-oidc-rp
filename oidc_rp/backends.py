@@ -99,8 +99,7 @@ class OIDCAuthBackend(ModelBackend):
         except OIDCUser.DoesNotExist:
             oidc_user = create_oidc_user_from_claims(userinfo_response_data)
         else:
-            oidc_user.userinfo = userinfo_response_data
-            oidc_user.save()
+            update_oidc_user_from_claims(oidc_user, userinfo_response_data)
         return oidc_user.user
 
 
@@ -113,3 +112,12 @@ def create_oidc_user_from_claims(claims):
     user = get_user_model().objects.create_user(smart_text(username), email)
     oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
     return oidc_user
+
+
+@transaction.atomic
+def update_oidc_user_from_claims(oidc_user, claims):
+    """ Updates an ``OIDCUser`` instance using the claims extracted from an id_token. """
+    oidc_user.userinfo = claims
+    oidc_user.save()
+    oidc_user.user.email = claims['email']
+    oidc_user.user.save()
