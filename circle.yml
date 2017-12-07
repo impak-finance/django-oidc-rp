@@ -4,13 +4,13 @@ machine:
 
 dependencies:
   pre:
-    - pip install pipenv
+    - pip install pipenv tox
     - pip install --upgrade setuptools
     - pipenv install --dev
 
 test:
   override:
     - make qa
-    - make tests
+    - tox
   post:
     - pipenv run py.test --cov-report html:$CIRCLE_ARTIFACTS --cov oidc_rp
