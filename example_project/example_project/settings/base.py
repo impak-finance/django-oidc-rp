@@ -11,7 +11,7 @@
 import os
 import pathlib
 
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 
 
 PROJECT_PACKAGE_NAME = 'example'

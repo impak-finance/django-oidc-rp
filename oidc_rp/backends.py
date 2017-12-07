@@ -14,8 +14,8 @@ import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import SuspiciousOperation
-from django.core.urlresolvers import reverse
 from django.db import transaction
+from django.urls import reverse
 from django.utils.encoding import force_bytes, smart_text
 
 from .conf import settings as oidc_rp_settings

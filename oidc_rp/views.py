@@ -14,8 +14,8 @@ import time
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
-from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, QueryDict
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.http import urlencode
 from django.views.generic import View
