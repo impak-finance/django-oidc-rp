@@ -45,8 +45,8 @@ PROVIDER_SIGNATURE_KEY = getattr(settings, 'OIDC_RP_PROVIDER_SIGNATURE_KEY', Non
 CLIENT_ID = getattr(settings, 'OIDC_RP_CLIENT_ID', None)
 CLIENT_SECRET = getattr(settings, 'OIDC_RP_CLIENT_SECRET', None)
 
-# The 'STATE_SIZE' setting defines the length of the opaque value used to maintain state between the
-# authentication request and the callback. It is notably usefull to mitigate Cross-Site Request
+# The 'STATE_LENGTH' setting defines the length of the opaque value used to maintain state between
+# the authentication request and the callback. It is notably usefull to mitigate Cross-Site Request
 # Forgery (CSRF, XSRF) by cryptographically binding the value with a cookie / a session key.
 STATE_LENGTH = getattr(settings, 'OIDC_RP_STATE_LENGTH', 32)
 
@@ -65,11 +65,17 @@ NONCE_LENGTH = getattr(settings, 'OIDC_RP_NONCE_LENGTH', 32)
 # valid token.
 ID_TOKEN_MAX_AGE = getattr(settings, 'OIDC_RP_ID_TOKEN_MAX_AGE', 600)
 
-# The 'AUTHENTICATION_REDIRECT_URI' defines the URI that should be used to redirect the end-user
-# after a successful authentication performed by the OIDC provider.
+# The 'AUTHENTICATION_REDIRECT_URI' setting defines the URI that should be used to redirect the
+# end-user after a successful authentication performed by the OIDC provider.
 AUTHENTICATION_REDIRECT_URI = getattr(settings, 'OIDC_RP_AUTHENTICATION_REDIRECT_URI', '/')
 
-# The 'AUTHENTICATION_FAILURE_REDIRECT_URI' defines the URI that should be used to redirect the
-# end-user after a failed authentication.
+# The 'AUTHENTICATION_FAILURE_REDIRECT_URI' setting defines the URI that should be used to redirect
+# the end-user after a failed authentication.
 AUTHENTICATION_FAILURE_REDIRECT_URI = getattr(
     settings, 'OIDC_RP_AUTHENTICATION_FAILURE_REDIRECT_URI', '/')
+
+# The 'USER_DETAILS_HANDLER' setting defines a path towards a function that should be executed each
+# time users sign in (or sign up) to the application using OpenID Connect. The considered function
+# takes the OpenID Connect user instance and the claims dictionary as main arguments. It should be
+# responsible for creating whatever is necessary to manage the user later on.
+USER_DETAILS_HANDLER = getattr(settings, 'OIDC_RP_USER_DETAILS_HANDLER', None)

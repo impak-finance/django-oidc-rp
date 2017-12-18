@@ -17,6 +17,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.db import transaction
 from django.urls import reverse
 from django.utils.encoding import force_bytes, smart_text
+from django.utils.module_loading import import_string
 
 from .conf import settings as oidc_rp_settings
 from .models import OIDCUser
@@ -100,6 +101,14 @@ class OIDCAuthBackend(ModelBackend):
             oidc_user = create_oidc_user_from_claims(userinfo_response_data)
         else:
             update_oidc_user_from_claims(oidc_user, userinfo_response_data)
+
+        # Runs a custom user details handler if applicable. Such handler could be responsible for
+        # creating / updating whatever is necessary to manage the considered user (eg. a profile).
+        user_details_handler = import_string(oidc_rp_settings.USER_DETAILS_HANDLER) \
+            if oidc_rp_settings.USER_DETAILS_HANDLER is not None else None
+        if user_details_handler is not None:
+            user_details_handler(oidc_user, userinfo_response_data)
+
         return oidc_user.user
 
 

@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import os
+import unittest.mock
 from calendar import timegm
 
 import httpretty
@@ -17,6 +18,11 @@ from oidc_rp.models import OIDCUser
 
 
 FIXTURE_ROOT = os.path.join(os.path.dirname(__file__), 'fixtures')
+
+
+def set_users_as_staff_members(oidc_user, claims):
+    oidc_user.user.is_staff = True
+    oidc_user.user.save()
 
 
 @pytest.mark.django_db
@@ -153,3 +159,15 @@ class TestOIDCAuthBackend:
         request.session.save()
         backend = OIDCAuthBackend()
         assert backend.authenticate('nonce', request) is None
+
+    @unittest.mock.patch('oidc_rp.conf.settings.USER_DETAILS_HANDLER',
+                         'tests.unit.test_backends.set_users_as_staff_members')
+    def test_can_authenticate_a_new_user_and_update_its_details_with_a_specific_handler(self, rf):
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate('nonce', request)
+        assert user.email == 'test@example.com'
+        assert user.oidc_user.sub == '1234'
+        assert user.is_staff
