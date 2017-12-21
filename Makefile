@@ -1,15 +1,15 @@
 .PHONY: install qa lint tests spec coverage
 
 
+init:
+	pipenv install --dev --three
+
+
 # DEVELOPMENT
 # ~~~~~~~~~~~
 # The following rules can be used during development in order to compile staticfiles, generate
 # locales, build documentation, etc.
 # --------------------------------------------------------------------------------------------------
-
-# Installs all the project's dependencies.
-install:
-	pipenv install --dev
 
 
 # QUALITY ASSURANCE
