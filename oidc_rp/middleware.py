@@ -11,6 +11,7 @@
 import time
 
 import requests
+import requests.exceptions
 from django.contrib import auth
 
 from .conf import settings as oidc_rp_settings
@@ -56,7 +57,11 @@ class OIDCRefreshIDTokenMiddleware:
 
         # Calls the token endpoint.
         token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload)
-        token_response.raise_for_status()
+        try:
+            token_response.raise_for_status()
+        except requests.exceptions.HTTPError:
+            auth.logout(request)
+            return
         token_response_data = token_response.json()
 
         # Validates the token.

@@ -134,3 +134,24 @@ class TestOIDCRefreshIDTokenMiddleware:
         middleware = OIDCRefreshIDTokenMiddleware(lambda r: 'OK')
         middleware(request)
         assert not request.user.is_authenticated
+
+    def test_log_out_the_user_if_the_refresh_token_is_expired(self, rf):
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate('nonce', request)
+        request.session['oidc_auth_id_token_exp_timestamp'] = \
+            (tz.now() - dt.timedelta(minutes=1)).timestamp()
+        request.session['oidc_auth_refresh_token'] = 'this_is_a_refresh_token'
+        auth.login(request, user)
+        request.user = user
+
+        httpretty.register_uri(
+            httpretty.POST, oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT,
+            body=json.dumps({'error': 'yes'}),
+            content_type='text/json', status=400)
+
+        middleware = OIDCRefreshIDTokenMiddleware(lambda r: 'OK')
+        middleware(request)
+        assert not request.user.is_authenticated
