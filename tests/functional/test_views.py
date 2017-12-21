@@ -91,6 +91,24 @@ class TestOIDCAuthCallbackView:
 
     @unittest.mock.patch('django.contrib.auth.authenticate')
     @unittest.mock.patch('django.contrib.auth.login')
+    def test_can_properly_authenticate_users_and_redirect_them_to_a_custom_success_url(
+            self, mocked_login, mocked_authenticate, client):
+        user = User.objects.create_user('foo')
+        mocked_authenticate.return_value = user
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session['oidc_auth_next_url'] = '/profile'
+        session.save()
+        url = reverse('oidc_auth_callback')
+        response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
+        assert response.status_code == 302
+        assert response.url == '/profile'
+        assert mocked_authenticate.call_count == 1
+        assert mocked_login.call_count == 1
+
+    @unittest.mock.patch('django.contrib.auth.authenticate')
+    @unittest.mock.patch('django.contrib.auth.login')
     @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_FAILURE_REDIRECT_URI', '/fail')
     def test_can_redirect_users_to_a_failure_page_in_case_of_missing_nonce(
             self, mocked_login, mocked_authenticate, client):

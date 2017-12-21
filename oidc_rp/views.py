@@ -17,7 +17,7 @@ from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.utils.crypto import get_random_string
-from django.utils.http import urlencode
+from django.utils.http import is_safe_url, urlencode
 from django.views.generic import View
 
 from .conf import settings as oidc_rp_settings
@@ -55,6 +55,11 @@ class OIDCAuthRequestView(View):
 
         # The generated state value must be stored in the user's session for further use.
         request.session['oidc_auth_state'] = state
+
+        # Stores the "next" URL in the session if applicable.
+        next_url = request.GET.get('next')
+        request.session['oidc_auth_next_url'] = next_url \
+            if is_safe_url(url=next_url, host=request.get_host()) else None
 
         # Redirects the user to authorization endpoint.
         query = urlencode(authentication_request_params)
@@ -100,6 +105,7 @@ class OIDCAuthCallbackView(View):
                 raise SuspiciousOperation('Invalid OpenID Connect callback state value')
 
             # Authenticates the end-user.
+            next_url = request.session.get('oidc_auth_next_url', None)
             user = auth.authenticate(nonce=nonce, request=request)
             if user and user.is_active:
                 auth.login(self.request, user)
@@ -108,7 +114,8 @@ class OIDCAuthCallbackView(View):
                 self.request.session['oidc_auth_id_token_exp_timestamp'] = \
                     time.time() + oidc_rp_settings.ID_TOKEN_MAX_AGE
 
-                return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
+                return HttpResponseRedirect(
+                    next_url or oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
 
         return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
 

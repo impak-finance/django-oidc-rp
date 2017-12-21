@@ -66,7 +66,8 @@ NONCE_LENGTH = getattr(settings, 'OIDC_RP_NONCE_LENGTH', 32)
 ID_TOKEN_MAX_AGE = getattr(settings, 'OIDC_RP_ID_TOKEN_MAX_AGE', 600)
 
 # The 'AUTHENTICATION_REDIRECT_URI' setting defines the URI that should be used to redirect the
-# end-user after a successful authentication performed by the OIDC provider.
+# end-user after a successful authentication performed by the OIDC provider if the view gets no
+# "next" parameter.
 AUTHENTICATION_REDIRECT_URI = getattr(settings, 'OIDC_RP_AUTHENTICATION_REDIRECT_URI', '/')
 
 # The 'AUTHENTICATION_FAILURE_REDIRECT_URI' setting defines the URI that should be used to redirect
