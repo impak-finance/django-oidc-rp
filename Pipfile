@@ -8,10 +8,8 @@ name = "pypi"
 [dev-packages]
 
 pytest = "*"
-pytest-django = "*"
 pytest-pythonpath = "*"
 pytest-spec = "*"
-pytest-sugar = "*"
 pytest-cov = "*"
 "flake8" = "*"
 isort = "*"
@@ -21,3 +19,4 @@ httpretty = "*"
 [packages]
 
 "e1839a8" = {path = ".", editable = true}
+pytest-django = "*"

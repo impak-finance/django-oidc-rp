@@ -217,6 +217,26 @@ class TestOIDCAuthCallbackView:
         assert 'oidc_auth_state' in client.session
         assert 'oidc_auth_nonce' not in client.session
 
+    @unittest.mock.patch('django.contrib.auth.authenticate')
+    @unittest.mock.patch('django.contrib.auth.login')
+    @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_REDIRECT_URI', '/success')
+    def test_stores_the_session_state_if_applicable(
+            self, mocked_login, mocked_authenticate, client):
+        user = User.objects.create_user('foo')
+        mocked_authenticate.return_value = user
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session.save()
+        url = reverse('oidc_auth_callback')
+        response = client.get(
+            url, {'code': 'dummycode', 'state': 'dummystate', 'session_state': 'thisisatest', })
+        assert response.status_code == 302
+        assert response.url == '/success'
+        assert mocked_authenticate.call_count == 1
+        assert mocked_login.call_count == 1
+        assert client.session['oidc_auth_session_state'] == 'thisisatest'
+
 
 @pytest.mark.django_db
 class TestOIDCEndSessionView:

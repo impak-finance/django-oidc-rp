@@ -43,4 +43,4 @@ coverage:
 
 # Run the tests in "spec" mode.
 spec:
-	pipenv run py.test --spec -p no:sugar
+	pipenv run py.test --spec

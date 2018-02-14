@@ -113,6 +113,11 @@ class OIDCAuthCallbackView(View):
                 # the project is configured to periodically refresh user's token.
                 self.request.session['oidc_auth_id_token_exp_timestamp'] = \
                     time.time() + oidc_rp_settings.ID_TOKEN_MAX_AGE
+                # Stores the "session_state" value that can be passed by the OpenID Connect provider
+                # in order to maintain a consistent session state across the OP and the related
+                # relying parties (RP).
+                self.request.session['oidc_auth_session_state'] = \
+                    callback_params.get('session_state', None)
 
                 return HttpResponseRedirect(
                     next_url or oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
