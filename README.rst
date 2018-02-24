@@ -98,7 +98,7 @@ endpoints. You can easily activate the related backend by adding it to the
         ),
         'DEFAULT_AUTHENTICATION_CLASSES': (
             # ...
-            'oidc_rp.contrib.rest_framework.authentication..BearerTokenAuthentication',
+            'oidc_rp.contrib.rest_framework.authentication.BearerTokenAuthentication',
         ),
     }
 
