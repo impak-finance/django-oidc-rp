@@ -38,13 +38,14 @@ class OIDCAuthRequestView(View):
         """ Processes GET requests. """
         # Defines common parameters used to bootstrap the authentication request.
         state = get_random_string(oidc_rp_settings.STATE_LENGTH)
-        authentication_request_params = {
+        authentication_request_params = request.GET.dict()
+        authentication_request_params.update({
             'scope': oidc_rp_settings.SCOPES,
             'response_type': 'code',
             'client_id': oidc_rp_settings.CLIENT_ID,
             'redirect_uri': request.build_absolute_uri(reverse('oidc_auth_callback')),
             'state': state,
-        }
+        })
 
         # Nonces should be used! In that case the generated nonce is stored both in the
         # authentication request parameters and in the user's session.
