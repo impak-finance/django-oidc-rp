@@ -1,4 +1,4 @@
 from django.dispatch import Signal
 
 
-request_dispatcher = Signal(providing_args=['request'])
+oidc_user_created = Signal(providing_args=['request', 'oidc_user'])
