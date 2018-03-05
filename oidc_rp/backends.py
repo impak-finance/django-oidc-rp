@@ -22,6 +22,7 @@ from django.utils.module_loading import import_string
 from .conf import settings as oidc_rp_settings
 from .models import OIDCUser
 from .utils import validate_and_return_id_token
+from .signals import request_dispatcher
 
 
 class OIDCAuthBackend(ModelBackend):
@@ -99,6 +100,7 @@ class OIDCAuthBackend(ModelBackend):
                 sub=userinfo_response_data.get('sub'))
         except OIDCUser.DoesNotExist:
             oidc_user = create_oidc_user_from_claims(userinfo_response_data)
+            request_dispatcher.send(sender=self.__class__, request=request)
         else:
             update_oidc_user_from_claims(oidc_user, userinfo_response_data)
 

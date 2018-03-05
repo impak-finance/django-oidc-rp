@@ -9,12 +9,14 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import SuspiciousOperation
+from django.core.handlers.wsgi import WSGIRequest
 from jwkest.jwk import KEYS, RSAKey
 from jwkest.jws import JWS
 
 from oidc_rp.backends import OIDCAuthBackend
 from oidc_rp.conf import settings as oidc_rp_settings
 from oidc_rp.models import OIDCUser
+from oidc_rp.signals import request_dispatcher
 
 
 FIXTURE_ROOT = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -171,3 +173,23 @@ class TestOIDCAuthBackend:
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
         assert user.is_staff
+
+    def test_request_signal_is_sent_during_new_user_authentication(self, rf):
+        self.signal_was_called = False
+
+        def handler(sender, request, **kwargs):
+            self.request = request
+            self.signal_was_called = True
+
+        request_dispatcher.connect(handler)
+
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        backend.authenticate('nonce', request)
+
+        assert self.signal_was_called is True
+        assert type(self.request) is WSGIRequest
+
+        request_dispatcher.disconnect(handler)
