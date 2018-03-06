@@ -8,6 +8,7 @@
 
 import datetime as dt
 from calendar import timegm
+from urllib.parse import urlparse
 
 from django.core.exceptions import SuspiciousOperation
 from django.utils.encoding import force_bytes, smart_bytes
@@ -51,7 +52,9 @@ def _get_jwks_keys(shared_key):
 
 def _validate_claims(id_token, nonce=None, validate_nonce=True):
     """ Validates the claims embedded in the JSON Web Token. """
-    if id_token['iss'].rstrip('/') != oidc_rp_settings.PROVIDER_ENDPOINT.rstrip('/'):
+    iss_parsed_url = urlparse(id_token['iss'])
+    provider_parsed_url = urlparse(oidc_rp_settings.PROVIDER_ENDPOINT)
+    if iss_parsed_url.netloc != provider_parsed_url.netloc:
         raise SuspiciousOperation('Invalid issuer')
 
     if isinstance(id_token['aud'], str):
