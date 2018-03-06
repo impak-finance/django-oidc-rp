@@ -147,8 +147,11 @@ class OIDCEndSessionView(View):
 
         # Log out the current user.
         if request.user.is_authenticated:
-            logout_url = self.provider_end_session_url \
-                if oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT else logout_url
+            try:
+                logout_url = self.provider_end_session_url \
+                    if oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT else logout_url
+            except KeyError:  # pragma: no cover
+                logout_url = logout_url
             auth.logout(request)
 
         # Redirects the user to the appropriate URL.
