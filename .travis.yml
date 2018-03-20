@@ -1,24 +1,11 @@
-dist: trusty
-sudo: true
+sudo: false
 language: python
-
 python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7-dev"
-env:
-  - DJANGO_ENV="django>=1.11,<2.0"
-  - DJANGO_ENV="django>=2.0,<2.1"
-
-matrix:
-  allow_failures:
-    - python: "3.7-dev"
-
-install:
-  - pip install pip pipenv -U
-  - pipenv install $DJANGO_ENV --skip-lock
-  - pipenv install --dev --skip-lock
+install: pip install tox-travis
 script:
-  - make qa
-  - make coverage
+  - tox -e lint
+  - tox -e isort
+  - tox
