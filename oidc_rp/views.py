@@ -123,6 +123,13 @@ class OIDCAuthCallbackView(View):
                 return HttpResponseRedirect(
                     next_url or oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
 
+        if 'error' in callback_params:
+            # If we receive an error in the callback GET parameters, this means that the
+            # authentication could not be performed at the OP level. In that case we have to logout
+            # the current user because we could've obtained this error after a prompt=none hit on
+            # OpenID Connect Provider authenticate endpoint.
+            auth.logout(request)
+
         return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
 
 

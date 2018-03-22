@@ -237,6 +237,20 @@ class TestOIDCAuthCallbackView:
         assert mocked_login.call_count == 1
         assert client.session['oidc_auth_session_state'] == 'thisisatest'
 
+    @unittest.mock.patch('django.contrib.auth.logout')
+    @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_FAILURE_REDIRECT_URI', '/fail')
+    def test_logout_the_current_user_if_the_authentication_failed_on_the_op(
+            self, mocked_logout, client):
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session.save()
+        url = reverse('oidc_auth_callback')
+        response = client.get(url, {'error': 'login_required', })
+        assert response.status_code == 302
+        assert response.url == '/fail'
+        assert mocked_logout.call_count == 1
+
 
 @pytest.mark.django_db
 class TestOIDCEndSessionView:
