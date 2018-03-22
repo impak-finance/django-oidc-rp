@@ -1,6 +1,6 @@
 """
-    OpenID Connect authentication backends
-    ======================================
+    OpenID Connect relying party (RP) authentication backends
+    =========================================================
 
     This modules defines backends allowing to authenticate a user using a specific token endpoint
     of an OpenID Connect provider (OP).
