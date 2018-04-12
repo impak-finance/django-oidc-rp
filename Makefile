@@ -1,4 +1,4 @@
-.PHONY: install qa lint tests spec coverage
+.PHONY: install qa lint tests spec coverage docs
 
 
 init:
@@ -10,6 +10,12 @@ init:
 # The following rules can be used during development in order to compile staticfiles, generate
 # locales, build documentation, etc.
 # --------------------------------------------------------------------------------------------------
+
+docs:
+	cd docs && rm -rf _build && pipenv run make html
+
+shell:
+	pipenv run ipython
 
 
 # QUALITY ASSURANCE

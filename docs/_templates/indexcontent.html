@@ -1,0 +1,17 @@
+{%- extends "layout.html" %}
+
+{% set title = _("Welcome to Django-oidc-rp's documentation!") %}
+
+{% block body %}
+<div class="figure align-center" id="id1">
+  <h1>Django-oidc-rp</h1>
+  <p>A server side OpenID Connect Relying Party (RP/Client) implementation for Django.</p>
+  <p class="align-center"><a href="{{ pathto("getting_started") }}" class="btn btn-primary" title="Getting started"><span class="fa fa-bolt">&nbsp;Getting started</span></a></p>
+</div>
+<br />
+<div class="figure align-center" id="id2">
+  <p><strong>Django-oidc-rp</strong> is a lightweight - server side OpenID Connect Relying Party (RP/Client)
+  implementation for Django. It allows to easily integrate an OpenID Connect provider as the
+  authentication source in a Django project.</p>
+</div>
+{% endblock body %}
