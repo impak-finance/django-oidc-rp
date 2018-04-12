@@ -110,4 +110,4 @@ impak Finance <hello@impakfinance.com>.
 License
 -------
 
-BSD. See ``LICENSE`` for more details.
+MIT. See ``LICENSE`` for more details.
