@@ -6,6 +6,9 @@ Welcome to django-oidc-rp's documentation!
    :maxdepth: 2
 
    getting_started
+   settings
+   contrib_packages/index
+   glossary
 
 Indices and tables
 ==================
