@@ -105,7 +105,7 @@ endpoints. You can easily activate the related backend by adding it to the
 Authors
 -------
 
-impak Finance <hello@impakfinance.com>.
+impak Finance <tech@impakfinance.com>.
 
 License
 -------
