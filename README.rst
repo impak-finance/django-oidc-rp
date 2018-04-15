@@ -1,8 +1,8 @@
 impak-django-oidc-rp
 ####################
 
-.. image:: https://readthedocs.org/projects/django-oidc-rp/badge/?version=stable
-    :target: https://django-oidc-rp.readthedocs.io/en/stable/
+.. image:: https://readthedocs.org/projects/django-oidc-rp/badge/?version=latest
+    :target: https://django-oidc-rp.readthedocs.io/en/latest/
     :alt: Documentation Status
 
 .. image:: https://travis-ci.org/impak-finance/django-oidc-rp.svg?branch=master
