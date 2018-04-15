@@ -37,9 +37,9 @@ class BearerTokenAuthentication(BaseAuthentication):
             return
 
         if len(auth) == 1:
-            raise AuthenticationFailed('Invalid Authorization header. No credentials provided')
+            raise AuthenticationFailed('Invalid authorization header; no bearer token provided')
         elif len(auth) > 2:
-            raise AuthenticationFailed('Invalid Authorization header. Many credentials provided')
+            raise AuthenticationFailed('Invalid authorization header; many bearer tokens provided')
 
         bearer_token = smart_text(auth[1])
 
@@ -50,7 +50,7 @@ class BearerTokenAuthentication(BaseAuthentication):
                 headers={'Authorization': 'Bearer {0}'.format(bearer_token)})
             userinfo_response.raise_for_status()
         except HTTPError:
-            raise AuthenticationFailed('Invalid Authorization header. Bearer token seems invalid.')
+            raise AuthenticationFailed('Bearer token seems invalid or expired.')
         userinfo_response_data = userinfo_response.json()
 
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
