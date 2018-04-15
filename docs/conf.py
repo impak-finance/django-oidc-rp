@@ -81,7 +81,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'default'
 
 if not ON_RTD:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
