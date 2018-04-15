@@ -17,13 +17,13 @@ def read_relative_file(filename):
 
 
 setup(
-    name='impak-django-oidc-rp',
+    name='django-oidc-rp',
     version=oidc_rp.__version__,
     author='impak Finance',
-    author_email='hello@impakfinance.com',
+    author_email='tech@impakfinance.com',
     packages=find_packages(exclude=['tests.*', 'tests']),
     include_package_data=True,
-    url='https://github.com/impak-finance/impak-django-oidc-rp',
+    url='https://github.com/impak-finance/django-oidc-rp',
     license='MIT',
     description='A server side OpenID Connect Relying Party (RP/Client) implementation for Django.',
     long_description=read_relative_file('README.rst'),
