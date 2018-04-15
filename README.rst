@@ -17,10 +17,16 @@ impak-django-oidc-rp
 implementation for Django. It allows to easily integrate an OpenID Connect provider as the
 authentication source in a Django project.
 
+.. contents:: Table of Contents
+    :local:
+
 Documentation
 =============
 
 Online browsable documentation is available at https://django-oidc-rp.readthedocs.io.
+
+Head over to the documentation for all the details on how to add OpenID Connect authentication
+support to your Django project
 
 Main requirements
 =================
