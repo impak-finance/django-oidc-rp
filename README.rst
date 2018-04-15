@@ -1,8 +1,8 @@
 impak-django-oidc-rp
 ====================
 
-.. image:: https://travis-ci.com/impak-finance/impak-django-oidc-rp.svg?token=qndJ5LBhGiwhWdgJCn95&branch=master
-    :target: https://travis-ci.com/impak-finance/impak-django-oidc-rp
+.. image:: https://travis-ci.org/impak-finance/django-oidc-rp.svg?branch=master
+    :target: https://travis-ci.org/impak-finance/django-oidc-rp
 
 |
 
