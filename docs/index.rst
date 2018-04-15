@@ -8,7 +8,8 @@ Welcome to django-oidc-rp's documentation!
    getting_started
    settings
    contrib_packages/index
-   glossary
+   contribution_guidelines
+   release_notes/index
 
 Indices and tables
 ==================

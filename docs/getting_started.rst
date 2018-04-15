@@ -150,6 +150,9 @@ the ones provided by django-oidc-rp. Here is an example:
       </body>
     </html>
 
+|
+
+*Congrats! You’re in!*
 
 .. _pip: https://github.com/pypa/pip
 .. _pipenv: https://github.com/pypa/pipenv
