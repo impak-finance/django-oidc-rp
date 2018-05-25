@@ -159,7 +159,7 @@ Default: ``600``
 -------------------------------------
 
 This settings defines whether the ``id_token`` content can be used to retrieve userinfo claims and
-scopes in order to create and updated the user being authenticated.
+scopes in order to create and update the user being authenticated.
 
 Default: ``False``
 

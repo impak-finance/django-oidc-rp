@@ -1,0 +1,15 @@
+####################################################
+Django-oidc-rp 0.3 release notes (UNDER DEVELOPMENT)
+####################################################
+
+Requirements and compatibility
+==============================
+
+Python 3.4, 3.5 and 3.6. Django 1.11 and 2.0.
+
+
+New features
+============
+
+* Added a ``OIDC_RP_ID_TOKEN_INCLUDE_USERINFO`` to retrieve userinfo claims and scopes from the
+  ``id_token`` in order to create and update authenticated users
