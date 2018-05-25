@@ -82,34 +82,38 @@ class OIDCAuthBackend(ModelBackend):
         request.session['oidc_auth_access_token'] = access_token
         request.session['oidc_auth_refresh_token'] = refresh_token
 
-        # Fetches the user information from the userinfo endpoint provided by the OP.
-        userinfo_response = requests.get(
-            oidc_rp_settings.PROVIDER_USERINFO_ENDPOINT,
-            headers={'Authorization': 'Bearer {0}'.format(access_token)})
-        userinfo_response.raise_for_status()
-        userinfo_response_data = userinfo_response.json()
+        # If the id_token contains userinfo scopes and claims we don't have to hit the userinfo
+        # endpoint.
+        if oidc_rp_settings.ID_TOKEN_INCLUDE_USERINFO:
+            userinfo_data = id_token
+        else:
+            # Fetches the user information from the userinfo endpoint provided by the OP.
+            userinfo_response = requests.get(
+                oidc_rp_settings.PROVIDER_USERINFO_ENDPOINT,
+                headers={'Authorization': 'Bearer {0}'.format(access_token)})
+            userinfo_response.raise_for_status()
+            userinfo_data = userinfo_response.json()
 
         # The e-mail address is mandatory for most applications so we return immediately if we
         # cannot find it in the user's claims.
-        if 'email' not in userinfo_response_data:
+        if 'email' not in userinfo_data:
             return
 
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
         try:
-            oidc_user = OIDCUser.objects.select_related('user').get(
-                sub=userinfo_response_data.get('sub'))
+            oidc_user = OIDCUser.objects.select_related('user').get(sub=userinfo_data.get('sub'))
         except OIDCUser.DoesNotExist:
-            oidc_user = create_oidc_user_from_claims(userinfo_response_data)
+            oidc_user = create_oidc_user_from_claims(userinfo_data)
             oidc_user_created.send(sender=self.__class__, request=request, oidc_user=oidc_user)
         else:
-            update_oidc_user_from_claims(oidc_user, userinfo_response_data)
+            update_oidc_user_from_claims(oidc_user, userinfo_data)
 
         # Runs a custom user details handler if applicable. Such handler could be responsible for
         # creating / updating whatever is necessary to manage the considered user (eg. a profile).
         user_details_handler = import_string(oidc_rp_settings.USER_DETAILS_HANDLER) \
             if oidc_rp_settings.USER_DETAILS_HANDLER is not None else None
         if user_details_handler is not None:
-            user_details_handler(oidc_user, userinfo_response_data)
+            user_details_handler(oidc_user, userinfo_data)
 
         return oidc_user.user
 

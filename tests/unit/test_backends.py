@@ -64,7 +64,8 @@ class TestOIDCAuthBackend:
         expiration_dt = kwargs.get('expiration_dt', (now_dt + dt.timedelta(seconds=30)))
         issue_dt = kwargs.get('issue_dt', now_dt)
         nonce = kwargs.get('nonce', 'nonce')
-        return {
+        ret = kwargs
+        ret.update({
             'iss': kwargs.get('iss', oidc_rp_settings.PROVIDER_ENDPOINT),
             'nonce': nonce,
             'aud': kwargs.get('aud', client_key),
@@ -73,7 +74,8 @@ class TestOIDCAuthBackend:
             'iat': timegm(issue_dt.utctimetuple()),
             'nbf': timegm(kwargs.get('nbf', now_dt).utctimetuple()),
             'sub': '1234',
-        }
+        })
+        return ret
 
     def test_can_authenticate_a_new_user(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
@@ -173,6 +175,25 @@ class TestOIDCAuthBackend:
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
         assert user.is_staff
+
+    @unittest.mock.patch('oidc_rp.conf.settings.ID_TOKEN_INCLUDE_USERINFO', True)
+    def test_can_process_userinfo_included_in_the_id_token_instead_of_calling_the_userinfo_endpoint(
+            self, rf):
+        httpretty.register_uri(
+            httpretty.POST, oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT,
+            body=json.dumps({
+                'id_token': self.generate_jws(email='test1@example.com'),
+                'access_token': 'accesstoken',
+                'refresh_token': 'refreshtoken',
+            }),
+            content_type='text/json')
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate('nonce', request)
+        assert user.email == 'test1@example.com'
+        assert user.oidc_user.sub == '1234'
 
     def test_oidc_user_created_signal_is_sent_during_new_user_authentication(self, rf):
         self.signal_was_called = False

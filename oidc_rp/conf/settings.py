@@ -69,6 +69,10 @@ NONCE_LENGTH = getattr(settings, 'OIDC_RP_NONCE_LENGTH', 32)
 # valid token.
 ID_TOKEN_MAX_AGE = getattr(settings, 'OIDC_RP_ID_TOKEN_MAX_AGE', 600)
 
+# The 'ID_TOKEN_INCLUDE_USERINFO' setting defines whether or not the id_token contains the userinfo
+# related claims (associated with the requested scopes).
+ID_TOKEN_INCLUDE_USERINFO = getattr(settings, 'OIDC_RP_ID_TOKEN_INCLUDE_USERINFO', False)
+
 # The 'AUTHENTICATION_REDIRECT_URI' setting defines the URI that should be used to redirect the
 # end-user after a successful authentication performed by the OIDC provider if the view gets no
 # "next" parameter.

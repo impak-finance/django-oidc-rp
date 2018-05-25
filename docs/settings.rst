@@ -155,6 +155,14 @@ This setting defines the amount of time (in seconds) an ``id_token`` should be c
 
 Default: ``600``
 
+``OIDC_RP_ID_TOKEN_INCLUDE_USERINFO``
+-------------------------------------
+
+This settings defines whether the ``id_token`` content can be used to retrieve userinfo claims and
+scopes in order to create and updated the user being authenticated.
+
+Default: ``False``
+
 ``OIDC_RP_AUTHENTICATION_REDIRECT_URI``
 ---------------------------------------
 
