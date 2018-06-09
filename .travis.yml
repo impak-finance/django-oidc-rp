@@ -15,6 +15,9 @@ env:
 matrix:
   allow_failures:
     - python: "3.7-dev"
+  exclude:
+    - python: "3.4"
+      env: DJANGO_ENV="django==2.1a1"
 
 install:
   - pip install pip pipenv -U
