@@ -10,6 +10,7 @@ python:
 env:
   - DJANGO_ENV="django>=1.11,<2.0"
   - DJANGO_ENV="django>=2.0,<2.1"
+  - DJANGO_ENV="django==2.1a1"
 
 matrix:
   allow_failures:

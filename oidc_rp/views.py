@@ -60,7 +60,7 @@ class OIDCAuthRequestView(View):
         # Stores the "next" URL in the session if applicable.
         next_url = request.GET.get('next')
         request.session['oidc_auth_next_url'] = next_url \
-            if is_safe_url(url=next_url, host=request.get_host()) else None
+            if is_safe_url(url=next_url, allowed_hosts=(request.get_host(), )) else None
 
         # Redirects the user to authorization endpoint.
         query = urlencode(authentication_request_params)
