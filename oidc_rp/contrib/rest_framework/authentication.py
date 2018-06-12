@@ -62,4 +62,4 @@ class BearerTokenAuthentication(BaseAuthentication):
         else:
             update_oidc_user_from_claims(oidc_user, userinfo_response_data)
 
-        return oidc_user.user, None
+        return oidc_user.user, bearer_token
