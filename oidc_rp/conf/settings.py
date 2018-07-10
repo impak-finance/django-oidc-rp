@@ -9,7 +9,6 @@
 from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
-from django.urls import reverse
 
 
 
@@ -103,4 +102,4 @@ UNAUTHENTICATED_SESSION_MANAGEMENT_KEY = getattr(
 # The 'REDIRECT_URI' settings defines a URL to be called after user authentication. 
 # This URL is responsible for receiving the code that will be used later to generate the token.
 
-REDIRECT_URI = getattr(settings, 'OIDC_RP_REDIRECT_URI', reverse('oidc_auth_callback'))
+REDIRECT_URI = getattr(settings, 'OIDC_RP_REDIRECT_URI', '/')
