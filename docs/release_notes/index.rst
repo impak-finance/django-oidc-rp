@@ -10,6 +10,7 @@ Django-oidc-rp 0.3
 .. toctree::
     :maxdepth: 1
 
+    v0.3.1
     v0.3
 
 Django-oidc-rp 0.2
