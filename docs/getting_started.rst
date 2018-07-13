@@ -5,8 +5,8 @@ Getting started
 Requirements
 ============
 
-* `Python`_ 3.4, 3.5 and 3.6
-* `Django`_ 1.11.x and 2.0.x
+* `Python`_ 3.4, 3.5, 3.6 and 3.7
+* `Django`_ 1.11.x, 2.0.x and 2.1.x
 * `Django-jsonfield`_ 2.0 or higher
 * `Pyjwkest`_ 1.4 or higher
 * `Requests`_ 2.0 or higher
