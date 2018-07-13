@@ -9,7 +9,7 @@
 import uuid
 from hashlib import md5, sha224, sha256
 
-from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.sites.requests import RequestSite
 
 from .conf import settings as oidc_rp_settings
 
@@ -27,7 +27,7 @@ def oidc(request):
             oidc_rp_settings.UNAUTHENTICATED_SESSION_MANAGEMENT_KEY.encode('utf-8')).hexdigest()
         session_state = '{client_id} {origin} {browser_state} {salt}'.format(
             client_id=oidc_rp_settings.CLIENT_ID,
-            origin='{}://{}'.format(request.scheme, get_current_site(request).domain),
+            origin='{}://{}'.format(request.scheme, RequestSite(request).domain),
             browser_state=browser_state, salt=salt)
         _anonymous_session_state = sha256(session_state.encode('utf-8')).hexdigest() + '.' + salt
 
