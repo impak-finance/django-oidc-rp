@@ -85,6 +85,7 @@ class OIDCAuthBackend(ModelBackend):
         # If the id_token contains userinfo scopes and claims we don't have to hit the userinfo
         # endpoint.
         if oidc_rp_settings.ID_TOKEN_INCLUDE_USERINFO:
+            print(id_token)
             userinfo_data = id_token
         else:
             # Fetches the user information from the userinfo endpoint provided by the OP.
@@ -129,5 +130,5 @@ def update_oidc_user_from_claims(oidc_user, claims):
     """ Updates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     oidc_user.userinfo = claims
     oidc_user.save()
-    oidc_user.user.email = claims['email']
+    oidc_user.user.email = claims.get('email')
     oidc_user.user.save()
