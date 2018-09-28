@@ -1,0 +1,15 @@
+######################################################
+Django-oidc-rp 0.3.2 release notes (UNDER DEVELOPMENT)
+######################################################
+
+Requirements and compatibility
+==============================
+
+Python 3.4, 3.5, 3.6 and 3.7. Django 1.11, 2.0 and 2.1.
+
+
+Minor changes
+=============
+
+* Ensured authentication that don't involve the 'email' scope work as expected
+  (`#5 <https://github.com/impak-finance/django-oidc-rp/issues/5>`_)
