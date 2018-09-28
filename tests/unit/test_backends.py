@@ -97,6 +97,20 @@ class TestOIDCAuthBackend:
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
 
+    def test_can_authenticate_a_new_user_even_if_no_email_is_in_userinfo_data(self, rf):
+        httpretty.register_uri(
+            httpretty.GET, oidc_rp_settings.PROVIDER_USERINFO_ENDPOINT,
+            body=json.dumps({'sub': '1234', }),
+            content_type='text/json',
+        )
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate('nonce', request)
+        assert not user.email
+        assert user.oidc_user.sub == '1234'
+
     def test_cannot_authenticate_a_user_if_the_nonce_is_not_provided_and_if_it_is_mandatory(
             self, rf):
         request = rf.get('/oidc/cb/', {'code': 'authcode', })
@@ -145,18 +159,6 @@ class TestOIDCAuthBackend:
             body=json.dumps({
                 'id_token': 'badidtoken', 'access_token': 'accesstoken',
                 'refresh_token': 'refreshtoken', }),
-            content_type='text/json')
-        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
-        SessionMiddleware().process_request(request)
-        request.session.save()
-        backend = OIDCAuthBackend()
-        assert backend.authenticate('nonce', request) is None
-
-    def test_cannot_authenticate_a_user_if_the_email_is_not_provided_by_the_userinfo_endpoint(
-            self, rf):
-        httpretty.register_uri(
-            httpretty.GET, oidc_rp_settings.PROVIDER_USERINFO_ENDPOINT,
-            body=json.dumps({'sub': '1234', }),
             content_type='text/json')
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
         SessionMiddleware().process_request(request)

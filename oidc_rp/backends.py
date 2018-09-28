@@ -94,11 +94,6 @@ class OIDCAuthBackend(ModelBackend):
             userinfo_response.raise_for_status()
             userinfo_data = userinfo_response.json()
 
-        # The e-mail address is mandatory for most applications so we return immediately if we
-        # cannot find it in the user's claims.
-        if 'email' not in userinfo_data:
-            return
-
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
         try:
             oidc_user = OIDCUser.objects.select_related('user').get(sub=userinfo_data.get('sub'))
@@ -122,9 +117,9 @@ class OIDCAuthBackend(ModelBackend):
 def create_oidc_user_from_claims(claims):
     """ Creates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     sub = claims['sub']
-    email = claims['email']
+    email = claims.get('email')
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
-    user = get_user_model().objects.create_user(smart_text(username), email)
+    user = get_user_model().objects.create_user(smart_text(username), email=email)
     oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
     return oidc_user
 
