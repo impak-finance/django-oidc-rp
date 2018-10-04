@@ -15,6 +15,7 @@ from rest_framework.test import APIRequestFactory
 from oidc_rp.conf import settings as oidc_rp_settings
 from oidc_rp.contrib.rest_framework.authentication import BearerTokenAuthentication
 from oidc_rp.models import OIDCUser
+from oidc_rp.signals import oidc_user_created
 
 
 FIXTURE_ROOT = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -135,3 +136,25 @@ class TestBearerTokenAuthentication:
         backend = BearerTokenAuthentication()
         with pytest.raises(AuthenticationFailed):
             backend.authenticate(request)
+
+    def test_oidc_user_created_signal_is_sent_during_new_user_authentication(self, rf):
+        self.signal_was_called = False
+
+        def handler(sender, request, oidc_user, **kwargs):
+            self.request = request
+            self.oidc_user = oidc_user
+            self.signal_was_called = True
+
+        oidc_user_created.connect(handler)
+
+        request = rf.get('/', HTTP_AUTHORIZATION='Bearer accesstoken')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = BearerTokenAuthentication()
+        user, _ = backend.authenticate(request)
+
+        assert self.signal_was_called is True
+        assert user.email == 'test@example.com'
+        assert user.oidc_user.sub == '1234'
+
+        oidc_user_created.disconnect(handler)
