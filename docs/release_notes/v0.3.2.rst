@@ -11,5 +11,6 @@ Python 3.4, 3.5, 3.6 and 3.7. Django 1.11, 2.0 and 2.1.
 Minor changes
 =============
 
-* Ensured authentication that don't involve the 'email' scope work as expected
+* Ensured that authentication that don't involve the ``email`` scope work as expected
   (`#5 <https://github.com/impak-finance/django-oidc-rp/issues/5>`_)
+* Ensured that the ``oidc_user_created`` signal is triggered by the DRF authentication backend
