@@ -43,7 +43,7 @@ class OIDCAuthRequestView(View):
             'scope': oidc_rp_settings.SCOPES,
             'response_type': 'code',
             'client_id': oidc_rp_settings.CLIENT_ID,
-            'redirect_uri': request.build_absolute_uri(reverse('oidc_auth_callback')),
+            'redirect_uri': oidc_rp_settings.REDIRECT_URI,
             'state': state,
         })
 
