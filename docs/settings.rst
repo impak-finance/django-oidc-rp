@@ -116,6 +116,14 @@ only when the ``OIDC_RP_PROVIDER_SIGNATURE_ALG`` setting is set to ``RS256``.
 
 Default: ``None``
 
+``OIDC_RP_USE_STATE``
+---------------------
+
+This setting defines whether or not states should be used when forging authorization requests.
+States are used to maintain state between the authentication request and the callback.
+
+Default: ``True``
+
 ``OIDC_RP_STATE_LENGTH``
 ------------------------
 
