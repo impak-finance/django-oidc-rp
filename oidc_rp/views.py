@@ -37,25 +37,27 @@ class OIDCAuthRequestView(View):
     def get(self, request):
         """ Processes GET requests. """
         # Defines common parameters used to bootstrap the authentication request.
-        state = get_random_string(oidc_rp_settings.STATE_LENGTH)
         authentication_request_params = request.GET.dict()
         authentication_request_params.update({
             'scope': oidc_rp_settings.SCOPES,
             'response_type': 'code',
             'client_id': oidc_rp_settings.CLIENT_ID,
             'redirect_uri': request.build_absolute_uri(reverse('oidc_auth_callback')),
-            'state': state,
         })
 
-        # Nonces should be used! In that case the generated nonce is stored both in the
+        # States should be used! They are recommended in order to maintain state between the
+        # authentication request and the callback.
+        if oidc_rp_settings.USE_STATE:
+            state = get_random_string(oidc_rp_settings.STATE_LENGTH)
+            authentication_request_params.update({'state': state})
+            request.session['oidc_auth_state'] = state
+
+        # Nonces should be used too! In that case the generated nonce is stored both in the
         # authentication request parameters and in the user's session.
         if oidc_rp_settings.USE_NONCE:
             nonce = get_random_string(oidc_rp_settings.NONCE_LENGTH)
             authentication_request_params.update({'nonce': nonce, })
             request.session['oidc_auth_nonce'] = nonce
-
-        # The generated state value must be stored in the user's session for further use.
-        request.session['oidc_auth_state'] = state
 
         # Stores the "next" URL in the session if applicable.
         next_url = request.GET.get('next')
@@ -97,12 +99,15 @@ class OIDCAuthCallbackView(View):
         # NOTE: a redirect to the failure page should be return if some required GET parameters are
         # missing or if no state can be retrieved from the current session.
 
-        if ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and \
-                ('code' in callback_params and 'state' in callback_params) and state:
+        if (
+            ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and
+            ((state and oidc_rp_settings.USE_STATE) or not oidc_rp_settings.USE_STATE) and
+            ('code' in callback_params and 'state' in callback_params)
+        ):
             # Ensures that the passed state values is the same as the one that was previously
             # generated when forging the authorization request. This is necessary to mitigate
             # Cross-Site Request Forgery (CSRF, XSRF).
-            if callback_params['state'] != state:
+            if oidc_rp_settings.USE_STATE and callback_params['state'] != state:
                 raise SuspiciousOperation('Invalid OpenID Connect callback state value')
 
             # Authenticates the end-user.

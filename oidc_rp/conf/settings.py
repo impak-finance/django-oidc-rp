@@ -49,6 +49,11 @@ PROVIDER_SIGNATURE_KEY = getattr(settings, 'OIDC_RP_PROVIDER_SIGNATURE_KEY', Non
 CLIENT_ID = getattr(settings, 'OIDC_RP_CLIENT_ID', None)
 CLIENT_SECRET = getattr(settings, 'OIDC_RP_CLIENT_SECRET', None)
 
+# The 'USE_STATE' settings defines whether or not states should be used in the authentication flow.
+# The state value is a recommended one (it is not required by the OpenID Connect specification). It
+# is used to maintain state between the authentication request and the callback.
+USE_STATE = getattr(settings, 'OIDC_USE_STATE', True)
+
 # The 'STATE_LENGTH' setting defines the length of the opaque value used to maintain state between
 # the authentication request and the callback. It is notably usefull to mitigate Cross-Site Request
 # Forgery (CSRF, XSRF) by cryptographically binding the value with a cookie / a session key.

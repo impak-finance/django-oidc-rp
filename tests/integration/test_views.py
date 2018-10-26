@@ -36,6 +36,19 @@ class TestOIDCAuthRequestView:
         assert parsed_parameters['state']
         assert 'nonce' not in parsed_parameters
 
+    @unittest.mock.patch('oidc_rp.conf.settings.USE_STATE', False)
+    def test_do_not_embed_a_state_in_the_request_parameters_if_the_related_setting_is_disabled(
+            self, client):
+        url = reverse('oidc_auth_request')
+        response = client.get(url, follow=False)
+        assert response.status_code == 302
+        parsed_parameters = parse_qs(urlparse(response.url).query)
+        assert parsed_parameters['response_type'] == ['code', ]
+        assert parsed_parameters['scope'] == ['openid email', ]
+        assert parsed_parameters['client_id'] == ['DUMMY_CLIENT_ID', ]
+        assert parsed_parameters['redirect_uri'] == ['http://testserver/oidc/auth/cb/', ]
+        assert 'state' not in parsed_parameters
+
     def test_saves_the_authorization_state_value_in_the_user_session(self, client):
         url = reverse('oidc_auth_request')
         response = client.get(url, follow=False)

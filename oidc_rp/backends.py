@@ -49,7 +49,7 @@ class OIDCAuthBackend(ModelBackend):
 
         # Don't go further if the state value or the authorization code is not present in the GET
         # parameters because we won't be able to get a valid token for the user in that case.
-        if state is None or code is None:
+        if (state is None and oidc_rp_settings.USE_STATE) or code is None:
             raise SuspiciousOperation('Authorization code or state value is missing')
 
         # Prepares the token payload that will be used to request an authentication token to the
