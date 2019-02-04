@@ -36,7 +36,7 @@ class OIDCAuthBackend(ModelBackend):
 
     """
 
-    def authenticate(self, nonce, request):
+    def authenticate(self, request, nonce=None, **kwargs):
         """ Authenticates users in case of the OpenID Connect Authorization code flow. """
         # NOTE: the request object is mandatory to perform the authentication using an authorization
         # code provided by the OIDC supplier.
