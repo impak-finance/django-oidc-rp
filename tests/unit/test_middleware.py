@@ -73,7 +73,7 @@ class TestOIDCRefreshIDTokenMiddleware:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         request.session['oidc_auth_id_token_exp_timestamp'] = \
             (tz.now() - dt.timedelta(minutes=1)).timestamp()
         request.session['oidc_auth_refresh_token'] = 'this_is_a_refresh_token'
@@ -90,7 +90,7 @@ class TestOIDCRefreshIDTokenMiddleware:
         request.session.save()
         user = get_user_model().objects.create_user('test', 'test@example.com', 'insecure')
         request.user = user
-        auth.authenticate(username='test', password='insecure')
+        auth.authenticate(request, username='test', password='insecure')
         auth.login(request, user)
         middleware = OIDCRefreshIDTokenMiddleware(lambda r: 'OK')
         middleware(request)
@@ -102,7 +102,7 @@ class TestOIDCRefreshIDTokenMiddleware:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         request.session['oidc_auth_id_token_exp_timestamp'] = \
             (tz.now() + dt.timedelta(minutes=1)).timestamp()
         request.session['oidc_auth_refresh_token'] = 'this_is_a_refresh_token'
@@ -117,7 +117,7 @@ class TestOIDCRefreshIDTokenMiddleware:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         request.session['oidc_auth_id_token_exp_timestamp'] = \
             (tz.now() - dt.timedelta(minutes=1)).timestamp()
         request.session['oidc_auth_refresh_token'] = 'this_is_a_refresh_token'
@@ -140,7 +140,7 @@ class TestOIDCRefreshIDTokenMiddleware:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         request.session['oidc_auth_id_token_exp_timestamp'] = \
             (tz.now() - dt.timedelta(minutes=1)).timestamp()
         request.session['oidc_auth_refresh_token'] = 'this_is_a_refresh_token'

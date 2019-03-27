@@ -112,7 +112,7 @@ class OIDCAuthCallbackView(View):
 
             # Authenticates the end-user.
             next_url = request.session.get('oidc_auth_next_url', None)
-            user = auth.authenticate(nonce=nonce, request=request)
+            user = auth.authenticate(request, nonce=nonce)
             if user and user.is_active:
                 auth.login(self.request, user)
                 # Stores an expiration timestamp in the user's session. This value will be used if
