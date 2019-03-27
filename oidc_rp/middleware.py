@@ -56,7 +56,8 @@ class OIDCRefreshIDTokenMiddleware:
         }
 
         # Calls the token endpoint.
-        token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload)
+        token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload,
+            verify=oidc_rp_settings.VERIFY_SSL)
         try:
             token_response.raise_for_status()
         except requests.exceptions.HTTPError:
