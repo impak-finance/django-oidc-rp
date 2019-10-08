@@ -114,14 +114,26 @@ class OIDCAuthBackend(ModelBackend):
         return oidc_user.user
 
 
+def get_or_create_user(username, email):
+    username = smart_text(username)
+
+    try:
+        user = get_user_model().objects.get(username=username, email=email)
+    except get_user_model().DoesNotExist:
+        user = get_user_model().objects.create_user(username, email=email)
+
+    return user
+
+
 @transaction.atomic
 def create_oidc_user_from_claims(claims):
     """ Creates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     sub = claims['sub']
     email = claims.get('email')
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
-    user = get_user_model().objects.create_user(smart_text(username), email=email)
+    user = get_or_create_user(username, email)
     oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
+
     return oidc_user
 
 
