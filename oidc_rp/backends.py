@@ -85,7 +85,6 @@ class OIDCAuthBackend(ModelBackend):
         # If the id_token contains userinfo scopes and claims we don't have to hit the userinfo
         # endpoint.
         if oidc_rp_settings.ID_TOKEN_INCLUDE_USERINFO:
-            print(id_token)
             userinfo_data = id_token
         else:
             # Fetches the user information from the userinfo endpoint provided by the OP.
