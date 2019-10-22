@@ -63,7 +63,8 @@ class OIDCAuthBackend(ModelBackend):
         }
 
         # Calls the token endpoint.
-        token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload)
+        token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload,
+            verify=oidc_rp_settings.VERIFY_SSL)
         token_response.raise_for_status()
         token_response_data = token_response.json()
 
@@ -90,7 +91,8 @@ class OIDCAuthBackend(ModelBackend):
             # Fetches the user information from the userinfo endpoint provided by the OP.
             userinfo_response = requests.get(
                 oidc_rp_settings.PROVIDER_USERINFO_ENDPOINT,
-                headers={'Authorization': 'Bearer {0}'.format(access_token)})
+                headers={'Authorization': 'Bearer {0}'.format(access_token)},
+                verify=oidc_rp_settings.VERIFY_SSL)
             userinfo_response.raise_for_status()
             userinfo_data = userinfo_response.json()
 

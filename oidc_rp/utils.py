@@ -43,7 +43,8 @@ def _get_jwks_keys(shared_key):
     # keys allowing to decrypt them. These public keys are exposed through the 'jwks_uri' and should
     # be used to decrypt the JWS - JSON Web Signature.
     jwks_keys = KEYS()
-    jwks_keys.load_from_url(oidc_rp_settings.PROVIDER_JWKS_ENDPOINT)
+    jwks_keys.load_from_url(oidc_rp_settings.PROVIDER_JWKS_ENDPOINT,
+        verify=oidc_rp_settings.VERIFY_SSL)
     # Adds the shared key (which can correspond to the client_secret) as an oct key so it can be
     # used for HMAC signatures.
     jwks_keys.add({'key': smart_bytes(shared_key), 'kty': 'oct'})

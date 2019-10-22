@@ -102,3 +102,6 @@ USER_DETAILS_HANDLER = getattr(settings, 'OIDC_RP_USER_DETAILS_HANDLER', None)
 # Relying Party. The session_state value for anonymous users will be computed by using this key.
 UNAUTHENTICATED_SESSION_MANAGEMENT_KEY = getattr(
     settings, 'OIDC_RP_UNAUTHENTICATED_SESSION_MANAGEMENT_KEY', None)
+
+# The 'VERIFY_SSL' setting defines whether or not the SSL certificates should be verified.
+VERIFY_SSL = getattr(settings, 'OIDC_RP_VERIFY_SSL', True)

@@ -82,7 +82,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
 
@@ -93,7 +93,7 @@ class TestOIDCAuthBackend:
         backend = OIDCAuthBackend()
         user = get_user_model().objects.create_user('test', 'test@example.com')
         OIDCUser.objects.create(user=user, sub='1234')
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
 
@@ -107,7 +107,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         assert not user.email
         assert user.oidc_user.sub == '1234'
 
@@ -117,14 +117,14 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        assert backend.authenticate(None, request) is None
+        assert backend.authenticate(request, nonce=None) is None
 
     def test_cannot_authenticate_a_user_if_the_request_object_is_not_provided(self, rf):
         request = rf.get('/oidc/cb/', {'code': 'authcode', })
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        assert backend.authenticate('nonce', None) is None
+        assert backend.authenticate(None, nonce='nonce') is None
 
     def test_cannot_authenticate_a_user_if_the_state_is_not_present_in_the_request_parameters(
             self, rf):
@@ -133,7 +133,7 @@ class TestOIDCAuthBackend:
         request.session.save()
         backend = OIDCAuthBackend()
         with pytest.raises(SuspiciousOperation):
-            backend.authenticate('nonce', request)
+            backend.authenticate(request, nonce='nonce')
 
     def test_cannot_authenticate_a_user_if_the_code_is_not_present_in_the_request_parameters(
             self, rf):
@@ -142,7 +142,7 @@ class TestOIDCAuthBackend:
         request.session.save()
         backend = OIDCAuthBackend()
         with pytest.raises(SuspiciousOperation):
-            backend.authenticate('nonce', request)
+            backend.authenticate(request, nonce='nonce')
 
     def test_cannot_authenticate_a_user_if_the_id_token_validation_shows_a_suspicious_operation(
             self, rf):
@@ -151,7 +151,7 @@ class TestOIDCAuthBackend:
         request.session.save()
         backend = OIDCAuthBackend()
         with pytest.raises(SuspiciousOperation):
-            backend.authenticate('badnonce', request)
+            backend.authenticate(request, nonce='badnonce')
 
     def test_cannot_authenticate_a_user_if_the_id_token_validation_fails(self, rf):
         httpretty.register_uri(
@@ -164,7 +164,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        assert backend.authenticate('nonce', request) is None
+        assert backend.authenticate(request, nonce='nonce') is None
 
     @unittest.mock.patch('oidc_rp.conf.settings.USER_DETAILS_HANDLER',
                          'tests.unit.test_backends.set_users_as_staff_members')
@@ -173,7 +173,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         assert user.email == 'test@example.com'
         assert user.oidc_user.sub == '1234'
         assert user.is_staff
@@ -193,7 +193,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        user = backend.authenticate('nonce', request)
+        user = backend.authenticate(request, nonce='nonce')
         assert user.email == 'test1@example.com'
         assert user.oidc_user.sub == '1234'
 
@@ -211,7 +211,7 @@ class TestOIDCAuthBackend:
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
-        backend.authenticate('nonce', request)
+        backend.authenticate(request, nonce='nonce')
 
         assert self.signal_was_called is True
         assert type(self.request) is WSGIRequest
