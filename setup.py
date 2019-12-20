@@ -31,7 +31,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'django>=1.11',
-        'jsonfield>=2.0',
+        'jsonfield2',
         'pyjwkest>=1.4',
         'requests>2.0',
     ],
