@@ -21,3 +21,4 @@ pluggy = "*"
 
 [packages]
 "e1839a8" = {path = ".", editable = true}
+jsonfield2 = "*"
