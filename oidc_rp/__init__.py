@@ -1,4 +1,4 @@
-__version__ = '0.3.5.dev'
+__version__ = '0.3.6.dev'
 
 # Deploying a new version:
 # 1. remove the ".dev" from the current version number
