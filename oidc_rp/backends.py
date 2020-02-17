@@ -141,7 +141,11 @@ def create_oidc_user_from_claims(claims):
     email = claims.get('email')
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
     user = get_or_create_user(username, email)
-    oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
+    if hasattr(user, 'oidc_user'):
+        update_oidc_user_from_claims(user.oidc_user, claims)
+        oidc_user = user.oidc_user
+    else:
+        oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
 
     return oidc_user
 
