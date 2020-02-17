@@ -114,12 +114,22 @@ class OIDCAuthBackend(ModelBackend):
 
 
 def get_or_create_user(username, email):
-    # username = smart_text(username)
+    username = smart_text(username)
 
-    try:
-        user = get_user_model().objects.get(username=username, email=email)
-    except get_user_model().DoesNotExist:
+    users = get_user_model().objects.filter(email=email)
+
+    if len(users) == 0:
         user = get_user_model().objects.create_user(username, email=email)
+    elif len(users) == 1:
+        return users[0]
+    else:  # duplicate handling
+        current_user = None
+        for u in users:
+            current_user = u
+            if hasattr(u, 'oidc_user'):
+                return u
+
+        return current_user
 
     return user
 
