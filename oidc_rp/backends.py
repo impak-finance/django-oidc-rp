@@ -114,7 +114,7 @@ class OIDCAuthBackend(ModelBackend):
 
 
 def get_or_create_user(username, email):
-    username = smart_text(username)
+    # username = smart_text(username)
 
     try:
         user = get_user_model().objects.get(username=username, email=email)
