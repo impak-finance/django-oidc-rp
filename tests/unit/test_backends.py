@@ -84,7 +84,8 @@ class TestOIDCAuthBackend:
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_can_authenticate_an_existing_user(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
@@ -95,7 +96,8 @@ class TestOIDCAuthBackend:
         OIDCUser.objects.create(user=user, sub='1234')
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_can_authenticate_a_new_user_even_if_no_email_is_in_userinfo_data(self, rf):
         httpretty.register_uri(
@@ -109,7 +111,8 @@ class TestOIDCAuthBackend:
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert not user.email
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_cannot_authenticate_a_user_if_the_nonce_is_not_provided_and_if_it_is_mandatory(
             self, rf):
@@ -175,7 +178,8 @@ class TestOIDCAuthBackend:
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
         assert user.is_staff
 
     @unittest.mock.patch('oidc_rp.conf.settings.ID_TOKEN_INCLUDE_USERINFO', True)
@@ -195,7 +199,8 @@ class TestOIDCAuthBackend:
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test1@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_oidc_user_created_signal_is_sent_during_new_user_authentication(self, rf):
         self.signal_was_called = False

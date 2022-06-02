@@ -77,7 +77,8 @@ class TestBearerTokenAuthentication:
         backend = BearerTokenAuthentication()
         user, _ = backend.authenticate(request)
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_can_authenticate_an_existing_user(self):
         rf = APIRequestFactory()
@@ -89,7 +90,8 @@ class TestBearerTokenAuthentication:
         OIDCUser.objects.create(user=user, sub='1234')
         user, _ = backend.authenticate(request)
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_cannot_authenticate_a_user_if_no_auth_header_is_present(self):
         rf = APIRequestFactory()
@@ -155,6 +157,7 @@ class TestBearerTokenAuthentication:
 
         assert self.signal_was_called is True
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
         oidc_user_created.disconnect(handler)

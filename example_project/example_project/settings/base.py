@@ -211,7 +211,7 @@ WSGI_APPLICATION = 'wsgi.application'
 # ------------------------------------------------------------------------------
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#login-url
-LOGIN_URL = reverse_lazy('oidc_auth_request')
+LOGIN_URL = reverse_lazy('oidc_rp:oidc_auth_request')
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#authentication-backends
 AUTHENTICATION_BACKENDS = [

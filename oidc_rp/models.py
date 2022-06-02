@@ -10,6 +10,7 @@
 
 from django.conf import settings
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.utils.translation import ugettext_lazy as _
 from jsonfield import JSONField
 
@@ -18,8 +19,8 @@ class OIDCUser(models.Model):
     """ Represents a user managed by an OpenID Connect provider (OP). """
 
     # An OpenID Connect user is associated with a record in the main user table.
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='oidc_user')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='oidc_users')
 
     # The 'sub' value (aka Subject Identifier) is a locally unique and never reassigned identifier
     # within the issuer for the end-user. It is intended to be consumed by relying parties and does
@@ -27,12 +28,19 @@ class OIDCUser(models.Model):
     # provider and relying parties.
     sub = models.CharField(max_length=255, unique=True, verbose_name=_('Subject identifier'))
 
+    # The 'iss' value represents the issuer - the identity provider which authorizes the user.
+    # Required to uniquely identify a user in case the RP allows multiple providers.
+    iss = models.CharField(max_length=255, unique=True, verbose_name=_('Issuer'), null=True)
+
     # The content of the userinfo response will be stored in the following field.
     userinfo = JSONField(verbose_name=_('Subject extra data'))
 
     class Meta:
         verbose_name = _('OpenID Connect user')
         verbose_name_plural = _('OpenID Connect users')
+        constraints = [
+            UniqueConstraint(fields=("sub", "iss"), name="unique_sub_in_provider")
+        ]
 
     def __str__(self):
         return str(self.user)

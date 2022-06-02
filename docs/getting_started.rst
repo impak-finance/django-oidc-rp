@@ -116,7 +116,7 @@ Just use the ``migrate`` command to install the models:
     Django-oidc-rp provides a single model used to store the user information provided by the
     configured OpenID Connect Provider (OP). This model also associates with each Django user a
     subject identifier (sub) - also provided by the OIDC provider in order to uniquely identify a
-    subject accrossa the relying parties.
+    subject across the relying parties.
 
 
 URLs configuration
@@ -127,7 +127,7 @@ Finally you have to update your main ``urls.py`` module in order to include the 
 .. code-block:: python
 
     urlpatterns = patterns(
-        url(r'^oidc/', include('oidc_rp.urls')),
+        url(r'^oidc/', include('oidc_rp.urls', namespace="oidc_rp")),
         # ...
     )
 
@@ -143,9 +143,9 @@ the ones provided by django-oidc-rp. Here is an example:
     <html>
       <body>
         {% if user.is_anonymous %}
-        <a href="{% url 'oidc_auth_request' %}">Login</a>
+        <a href="{% url 'oidc_rp:oidc_auth_request' %}">Login</a>
         {% else %}
-        <a href="{% url 'oidc_end_session' %}">Logout</a>
+        <a href="{% url 'oidc_rp:oidc_end_session' %}">Logout</a>
         {% endif %}
       </body>
     </html>
