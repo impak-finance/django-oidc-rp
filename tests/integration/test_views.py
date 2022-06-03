@@ -10,7 +10,7 @@ from django.urls import reverse
 @pytest.mark.django_db
 class TestOIDCAuthRequestView:
     def test_can_redirect_the_user_to_the_authorization_server_to_be_authenticated(self, client):
-        url = reverse('oidc_auth_request')
+        url = reverse('oidc_rp:oidc_auth_request')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         assert response.url.startswith('http://example.com/a/authorize')
@@ -25,7 +25,7 @@ class TestOIDCAuthRequestView:
     @unittest.mock.patch('oidc_rp.conf.settings.USE_NONCE', False)
     def test_do_not_embed_a_nonce_in_the_request_parameters_if_the_related_setting_is_disabled(
             self, client):
-        url = reverse('oidc_auth_request')
+        url = reverse('oidc_rp:oidc_auth_request')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         parsed_parameters = parse_qs(urlparse(response.url).query)
@@ -39,7 +39,7 @@ class TestOIDCAuthRequestView:
     @unittest.mock.patch('oidc_rp.conf.settings.USE_STATE', False)
     def test_do_not_embed_a_state_in_the_request_parameters_if_the_related_setting_is_disabled(
             self, client):
-        url = reverse('oidc_auth_request')
+        url = reverse('oidc_rp:oidc_auth_request')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         parsed_parameters = parse_qs(urlparse(response.url).query)
@@ -50,14 +50,14 @@ class TestOIDCAuthRequestView:
         assert 'state' not in parsed_parameters
 
     def test_saves_the_authorization_state_value_in_the_user_session(self, client):
-        url = reverse('oidc_auth_request')
+        url = reverse('oidc_rp:oidc_auth_request')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         parsed_parameters = parse_qs(urlparse(response.url).query)
         assert client.session['oidc_auth_state'] == parsed_parameters['state'][0]
 
     def test_saves_the_nonce_value_in_the_user_session_if_applicable(self, client):
-        url = reverse('oidc_auth_request')
+        url = reverse('oidc_rp:oidc_auth_request')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         parsed_parameters = parse_qs(urlparse(response.url).query)
@@ -77,7 +77,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/success'
@@ -95,7 +95,7 @@ class TestOIDCAuthCallbackView:
         session = client.session
         session['oidc_auth_state'] = 'dummystate'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/success'
@@ -113,7 +113,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_nonce'] = 'dummynonce'
         session['oidc_auth_next_url'] = '/profile'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/profile'
@@ -130,7 +130,7 @@ class TestOIDCAuthCallbackView:
         session = client.session
         session['oidc_auth_state'] = 'dummystate'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/fail'
@@ -148,7 +148,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/fail'
@@ -166,7 +166,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode'})
         assert response.status_code == 302
         assert response.url == '/fail'
@@ -186,7 +186,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/fail'
@@ -204,7 +204,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'validstate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 400  # suspicious operation
         assert not mocked_authenticate.call_count
@@ -221,7 +221,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/success'
@@ -241,7 +241,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(
             url, {'code': 'dummycode', 'state': 'dummystate', 'session_state': 'thisisatest', })
         assert response.status_code == 302
@@ -258,7 +258,7 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_state'] = 'dummystate'
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
-        url = reverse('oidc_auth_callback')
+        url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'error': 'login_required', })
         assert response.status_code == 302
         assert response.url == '/fail'
@@ -277,7 +277,7 @@ class TestOIDCEndSessionView:
         session = client.session
         session['oidc_auth_id_token'] = 'idtoken'
         session.save()
-        url = reverse('oidc_end_session')
+        url = reverse('oidc_rp:oidc_end_session')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         assert response.url.startswith('http://example.com/a/end-session')
@@ -292,7 +292,7 @@ class TestOIDCEndSessionView:
             self, mocked_logout, client):
         User.objects.create_user('foo', password='insecure')
         client.login(username='foo', password='insecure')
-        url = reverse('oidc_end_session')
+        url = reverse('oidc_rp:oidc_end_session')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         assert response.url == '/logout'
@@ -301,7 +301,7 @@ class TestOIDCEndSessionView:
     @unittest.mock.patch('django.contrib.auth.logout')
     @override_settings(LOGOUT_REDIRECT_URL='/logout')
     def test_silently_works_for_anonymous_users(self, mocked_logout, client):
-        url = reverse('oidc_end_session')
+        url = reverse('oidc_rp:oidc_end_session')
         response = client.get(url, follow=False)
         assert response.status_code == 302
         assert response.url == '/logout'

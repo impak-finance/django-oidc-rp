@@ -26,11 +26,11 @@ class OIDCUser(models.Model):
     # within the issuer for the end-user. It is intended to be consumed by relying parties and does
     # not change over time. It corresponds to the only way to uniquely identify users between OIDC
     # provider and relying parties.
-    sub = models.CharField(max_length=255, unique=True, verbose_name=_('Subject identifier'))
+    sub = models.CharField(max_length=255, verbose_name=_('Subject identifier'))
 
     # The 'iss' value represents the issuer - the identity provider which authorizes the user.
     # Required to uniquely identify a user in case the RP allows multiple providers.
-    iss = models.CharField(max_length=255, unique=True, verbose_name=_('Issuer'), null=True)
+    iss = models.CharField(max_length=255, verbose_name=_('Issuer'), null=True)
 
     # The content of the userinfo response will be stored in the following field.
     userinfo = JSONField(verbose_name=_('Subject extra data'))
