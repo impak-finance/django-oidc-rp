@@ -59,7 +59,9 @@ class OIDCAuthBackend(ModelBackend):
             'client_secret': oidc_rp_settings.CLIENT_SECRET,
             'grant_type': 'authorization_code',
             'code': code,
-            'redirect_uri': request.build_absolute_uri(reverse('oidc_auth_callback')),
+            'redirect_uri': request.build_absolute_uri(
+                reverse('oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace)
+            ),
         }
 
         # Calls the token endpoint.
@@ -95,10 +97,13 @@ class OIDCAuthBackend(ModelBackend):
             userinfo_data = userinfo_response.json()
 
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
+        id_provider = id_token.get("iss")
         try:
-            oidc_user = OIDCUser.objects.select_related('user').get(sub=userinfo_data.get('sub'))
+            oidc_user = OIDCUser.objects.select_related('user').get(
+                sub=userinfo_data.get('sub'), iss=id_provider
+            )
         except OIDCUser.DoesNotExist:
-            oidc_user = create_oidc_user_from_claims(userinfo_data)
+            oidc_user = create_oidc_user_from_claims(userinfo_data, id_provider)
             oidc_user_created.send(sender=self.__class__, request=request, oidc_user=oidc_user)
         else:
             update_oidc_user_from_claims(oidc_user, userinfo_data)
@@ -126,7 +131,7 @@ def get_or_create_user(username, email):
         current_user = None
         for u in users:
             current_user = u
-            if hasattr(u, 'oidc_user'):
+            if hasattr(u, 'oidc_users'):
                 return u
 
         return current_user
@@ -135,25 +140,34 @@ def get_or_create_user(username, email):
 
 
 @transaction.atomic
-def create_oidc_user_from_claims(claims):
+def create_oidc_user_from_claims(claims, id_provider=None):
     """ Creates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     sub = claims['sub']
     email = claims.get('email')
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
     user = get_or_create_user(username, email)
-    if hasattr(user, 'oidc_user'):
-        update_oidc_user_from_claims(user.oidc_user, claims)
-        oidc_user = user.oidc_user
-    else:
-        oidc_user = OIDCUser.objects.create(user=user, sub=sub, userinfo=claims)
+    if hasattr(user, 'oidc_users'):
+        try:
+            oidc_user = user.oidc_users.get(iss=id_provider)
+            update_oidc_user_from_claims(oidc_user, claims)
+            return oidc_user
+        except OIDCUser.DoesNotExist:
+            oidc_user = user.oidc_users.filter(iss=None).first()
+            if oidc_user:
+                update_oidc_user_from_claims(oidc_user, claims, id_provider)
+                return oidc_user
+
+    oidc_user = OIDCUser.objects.create(user=user, sub=sub, iss=id_provider, userinfo=claims)
 
     return oidc_user
 
 
 @transaction.atomic
-def update_oidc_user_from_claims(oidc_user, claims):
+def update_oidc_user_from_claims(oidc_user, claims, id_provider=None):
     """ Updates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     oidc_user.userinfo = claims
+    if id_provider:
+        oidc_user.iss = id_provider
     oidc_user.save()
     oidc_user.user.email = claims.get('email')
     oidc_user.user.save()

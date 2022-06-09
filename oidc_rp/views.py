@@ -42,7 +42,9 @@ class OIDCAuthRequestView(View):
             'scope': oidc_rp_settings.SCOPES,
             'response_type': 'code',
             'client_id': oidc_rp_settings.CLIENT_ID,
-            'redirect_uri': request.build_absolute_uri(reverse('oidc_auth_callback')),
+            'redirect_uri': request.build_absolute_uri(reverse(
+                'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
+            )),
         })
 
         # States should be used! They are recommended in order to maintain state between the

@@ -8,6 +8,7 @@ import pytest
 from django.contrib import auth
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.urls import resolve
 from django.utils import timezone as tz
 from jwkest.jwk import KEYS, RSAKey
 from jwkest.jws import JWS
@@ -70,6 +71,7 @@ class TestOIDCRefreshIDTokenMiddleware:
 
     def test_can_refresh_the_access_token_of_a_previously_authenticated_user(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -99,6 +101,7 @@ class TestOIDCRefreshIDTokenMiddleware:
 
     def test_do_nothing_if_the_access_token_is_still_valid(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -114,6 +117,7 @@ class TestOIDCRefreshIDTokenMiddleware:
 
     def test_log_out_the_user_if_the_id_token_is_not_valid(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -137,6 +141,7 @@ class TestOIDCRefreshIDTokenMiddleware:
 
     def test_log_out_the_user_if_the_refresh_token_is_expired(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()

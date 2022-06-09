@@ -13,6 +13,7 @@ from django.conf.urls import url
 from . import views
 
 
+app_name = "oidc_rp"
 urlpatterns = [
     url(r'^auth/request/$', views.OIDCAuthRequestView.as_view(), name='oidc_auth_request'),
     url(r'^auth/cb/$', views.OIDCAuthCallbackView.as_view(), name='oidc_auth_callback'),

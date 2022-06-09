@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import SuspiciousOperation
 from django.core.handlers.wsgi import WSGIRequest
+from django.urls import resolve
 from jwkest.jwk import KEYS, RSAKey
 from jwkest.jws import JWS
 
@@ -79,15 +80,19 @@ class TestOIDCAuthBackend:
 
     def test_can_authenticate_a_new_user(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
 
     def test_can_authenticate_an_existing_user(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -95,7 +100,52 @@ class TestOIDCAuthBackend:
         OIDCUser.objects.create(user=user, sub='1234')
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+
+    def test_can_authenticate_an_existing_user_with_provider(self, rf):
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = get_user_model().objects.create_user('test', 'test@example.com')
+        OIDCUser.objects.create(user=user, sub='1234', iss=oidc_rp_settings.PROVIDER_ENDPOINT)
+        user = backend.authenticate(request, 'nonce')
+        assert user.email == 'test@example.com'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+
+    def test_can_authenticate_an_existing_user_with_different_provider(self, rf):
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = get_user_model().objects.create_user('test', 'test@example.com')
+        OIDCUser.objects.create(user=user, sub='12556', iss="http://other-provider.example.com/")
+        user = backend.authenticate(request, 'nonce')
+        assert user.email == 'test@example.com'
+        assert user.oidc_users.count() == 2
+        assert user.oidc_users.last().sub == '1234'
+        assert user.oidc_users.last().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+
+    def test_can_handle_duplicate_subs_from_different_providers(self, rf):
+        request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = get_user_model().objects.create_user('conflict', 'conflict@example.com')
+        OIDCUser.objects.create(user=user, sub='1234', iss="http://other-provider.example.com/")
+        user = backend.authenticate(request, 'nonce')
+        assert user.email == 'test@example.com'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+        assert OIDCUser.objects.count() == 2  # the conflicting user still exists
 
     def test_can_authenticate_a_new_user_even_if_no_email_is_in_userinfo_data(self, rf):
         httpretty.register_uri(
@@ -104,12 +154,14 @@ class TestOIDCAuthBackend:
             content_type='text/json',
         )
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert not user.email
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_cannot_authenticate_a_user_if_the_nonce_is_not_provided_and_if_it_is_mandatory(
             self, rf):
@@ -147,6 +199,7 @@ class TestOIDCAuthBackend:
     def test_cannot_authenticate_a_user_if_the_id_token_validation_shows_a_suspicious_operation(
             self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -161,6 +214,7 @@ class TestOIDCAuthBackend:
                 'refresh_token': 'refreshtoken', }),
             content_type='text/json')
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
@@ -170,12 +224,14 @@ class TestOIDCAuthBackend:
                          'tests.unit.test_backends.set_users_as_staff_members')
     def test_can_authenticate_a_new_user_and_update_its_details_with_a_specific_handler(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
         assert user.is_staff
 
     @unittest.mock.patch('oidc_rp.conf.settings.ID_TOKEN_INCLUDE_USERINFO', True)
@@ -190,12 +246,14 @@ class TestOIDCAuthBackend:
             }),
             content_type='text/json')
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
         user = backend.authenticate(request, 'nonce')
         assert user.email == 'test1@example.com'
-        assert user.oidc_user.sub == '1234'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
 
     def test_oidc_user_created_signal_is_sent_during_new_user_authentication(self, rf):
         self.signal_was_called = False
@@ -208,6 +266,7 @@ class TestOIDCAuthBackend:
         oidc_user_created.connect(handler)
 
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
         backend = OIDCAuthBackend()
