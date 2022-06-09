@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+
+  django-oidc-rp:
+    env_file:
+      - .env
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile
+
+    volumes:
+      - .:/code
+
+

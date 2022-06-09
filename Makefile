@@ -1,4 +1,4 @@
-.PHONY: install qa lint tests spec coverage docs
+.PHONY: install qa lint tests spec coverage docs build clean deploy build_and_deploy
 
 
 init:
@@ -50,3 +50,17 @@ coverage:
 # Run the tests in "spec" mode.
 spec:
 	pipenv run py.test --spec
+
+build:
+	docker-compose run --entrypoint "sh /code/docker/build.sh" django-oidc-rp --rm
+
+clean:
+	docker-compose run --entrypoint "sh /code/docker/clean.sh" django-oidc-rp --rm
+
+deploy:
+	docker-compose run --entrypoint "sh /code/docker/upload.sh" django-oidc-rp --rm
+
+build_and_deploy:
+	make clean
+	make build
+	make deploy
