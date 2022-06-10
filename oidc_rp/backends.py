@@ -103,7 +103,7 @@ class OIDCAuthBackend(ModelBackend):
                 sub=userinfo_data.get('sub'), iss=id_provider
             )
         except OIDCUser.DoesNotExist:
-            oidc_user = create_oidc_user_from_claims(userinfo_data, id_provider)
+            oidc_user = self.create_oidc_user_from_claims(userinfo_data, id_provider)
             oidc_user_created.send(sender=self.__class__, request=request, oidc_user=oidc_user)
         else:
             update_oidc_user_from_claims(oidc_user, userinfo_data)
@@ -116,6 +116,9 @@ class OIDCAuthBackend(ModelBackend):
             user_details_handler(oidc_user, userinfo_data)
 
         return oidc_user.user
+
+    def create_oidc_user_from_claims(self, claims, id_provider=None):
+        return create_oidc_user_from_claims(claims, id_provider)
 
 
 def get_or_create_user(username, email):
