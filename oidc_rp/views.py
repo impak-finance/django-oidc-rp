@@ -4,7 +4,7 @@
 
     This modules defines views allowing to start the authorization and authentication process in
     order to authenticate a specific user. The most important views are: the "login" allowing to
-    authenticate the users using the OP and get an authorizartion code, the callback view allowing
+    authenticate the users using the OP and get an authorization code, the callback view allowing
     to retrieve a valid token for the considered user and the logout view.
 
 """
@@ -13,7 +13,7 @@ import time
 
 from django.conf import settings
 from django.contrib import auth
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation, ImproperlyConfigured
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -40,7 +40,7 @@ class OIDCAuthRequestView(View):
         authentication_request_params = request.GET.dict()
         authentication_request_params.update({
             'scope': oidc_rp_settings.SCOPES,
-            'response_type': 'code',
+            'response_type': oidc_rp_settings.RESPONSE_TYPE,
             'client_id': oidc_rp_settings.CLIENT_ID,
             'redirect_uri': request.build_absolute_uri(reverse(
                 'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
@@ -98,13 +98,20 @@ class OIDCAuthCallbackView(View):
         # authentication cannot be performed and so we have redirect the user to a failure URL.
         nonce = request.session.pop('oidc_auth_nonce', None)
 
+        if oidc_rp_settings.RESPONSE_TYPE == "code":
+            has_required_params = 'code' in callback_params
+        elif oidc_rp_settings.RESPONSE_TYPE == "token":
+            has_required_params = 'access_token' in callback_params
+        else:
+            raise ImproperlyConfigured("Unsupported response type")
+
         # NOTE: a redirect to the failure page should be return if some required GET parameters are
         # missing or if no state can be retrieved from the current session.
 
         if (
             ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and
             ((state and oidc_rp_settings.USE_STATE) or not oidc_rp_settings.USE_STATE) and
-            ('code' in callback_params and 'state' in callback_params)
+            (has_required_params and 'state' in callback_params)
         ):
             # Ensures that the passed state values is the same as the one that was previously
             # generated when forging the authorization request. This is necessary to mitigate
@@ -158,7 +165,6 @@ class OIDCEndSessionView(View):
     def post(self, request):
         """ Processes POST requests. """
         logout_url = settings.LOGOUT_REDIRECT_URL or '/'
-
         # Log out the current user.
         if request.user.is_authenticated:
             try:
@@ -178,5 +184,5 @@ class OIDCEndSessionView(View):
         q[oidc_rp_settings.PROVIDER_END_SESSION_REDIRECT_URI_PARAMETER] = \
             self.request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL or '/')
         q[oidc_rp_settings.PROVIDER_END_SESSION_ID_TOKEN_PARAMETER] = \
-            self.request.session['oidc_auth_id_token']
+            self.request.session.get('oidc_auth_id_token')
         return '{}?{}'.format(oidc_rp_settings.PROVIDER_END_SESSION_ENDPOINT, q.urlencode())

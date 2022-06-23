@@ -3,8 +3,11 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.test import override_settings
 from django.urls import reverse
+
+from oidc_rp.conf import settings as oidc_rp_settings
 
 
 @pytest.mark.django_db
@@ -66,6 +69,13 @@ class TestOIDCAuthRequestView:
 
 @pytest.mark.django_db
 class TestOIDCAuthCallbackView:
+    def setup(self):
+        self.old_response_type = oidc_rp_settings.RESPONSE_TYPE
+        oidc_rp_settings.RESPONSE_TYPE = "code"
+
+    def teardown(self):
+        oidc_rp_settings.RESPONSE_TYPE = self.old_response_type
+
     @unittest.mock.patch('django.contrib.auth.authenticate')
     @unittest.mock.patch('django.contrib.auth.login')
     @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_REDIRECT_URI', '/success')
@@ -79,6 +89,25 @@ class TestOIDCAuthCallbackView:
         session.save()
         url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
+        assert response.status_code == 302
+        assert response.url == '/success'
+        assert mocked_authenticate.call_count == 1
+        assert mocked_login.call_count == 1
+
+    @unittest.mock.patch('django.contrib.auth.authenticate')
+    @unittest.mock.patch('django.contrib.auth.login')
+    @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_REDIRECT_URI', '/success')
+    def test_can_properly_authenticate_users_and_redirect_them_to_a_success_url_with_token_response(
+            self, mocked_login, mocked_authenticate, client):
+        oidc_rp_settings.RESPONSE_TYPE = "token"
+        user = User.objects.create_user('foo')
+        mocked_authenticate.return_value = user
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session.save()
+        url = reverse('oidc_rp:oidc_auth_callback')
+        response = client.get(url, {'access_token': 'dummyaccesstoken', 'state': 'dummystate'})
         assert response.status_code == 302
         assert response.url == '/success'
         assert mocked_authenticate.call_count == 1
@@ -140,7 +169,7 @@ class TestOIDCAuthCallbackView:
     @unittest.mock.patch('django.contrib.auth.authenticate')
     @unittest.mock.patch('django.contrib.auth.login')
     @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_FAILURE_REDIRECT_URI', '/fail')
-    def test_can_redirect_users_to_a_failure_page_in_case_of_missing_code_parameter(
+    def test_can_redirect_users_to_a_failure_page_in_case_of_missing_code_param_in_code_response(
             self, mocked_login, mocked_authenticate, client):
         user = User.objects.create_user('foo')
         mocked_authenticate.return_value = user
@@ -149,7 +178,26 @@ class TestOIDCAuthCallbackView:
         session['oidc_auth_nonce'] = 'dummynonce'
         session.save()
         url = reverse('oidc_rp:oidc_auth_callback')
-        response = client.get(url, {'state': 'dummystate'})
+        response = client.get(url, {'state': 'dummystate', 'access_token': 'dummyaccesstoken'})
+        assert response.status_code == 302
+        assert response.url == '/fail'
+        assert not mocked_authenticate.call_count
+        assert not mocked_login.call_count
+
+    @unittest.mock.patch('django.contrib.auth.authenticate')
+    @unittest.mock.patch('django.contrib.auth.login')
+    @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_FAILURE_REDIRECT_URI', '/fail')
+    def test_can_redirect_users_to_a_failure_page_in_case_of_missing_token_param_in_token_response(
+            self, mocked_login, mocked_authenticate, client):
+        oidc_rp_settings.RESPONSE_TYPE = "token"
+        user = User.objects.create_user('foo')
+        mocked_authenticate.return_value = user
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session.save()
+        url = reverse('oidc_rp:oidc_auth_callback')
+        response = client.get(url, {'state': 'dummystate', 'code': 'dummycode'})
         assert response.status_code == 302
         assert response.url == '/fail'
         assert not mocked_authenticate.call_count
@@ -207,6 +255,26 @@ class TestOIDCAuthCallbackView:
         url = reverse('oidc_rp:oidc_auth_callback')
         response = client.get(url, {'code': 'dummycode', 'state': 'dummystate'})
         assert response.status_code == 400  # suspicious operation
+        assert not mocked_authenticate.call_count
+        assert not mocked_login.call_count
+
+    @unittest.mock.patch('django.contrib.auth.authenticate')
+    @unittest.mock.patch('django.contrib.auth.login')
+    @unittest.mock.patch('oidc_rp.conf.settings.AUTHENTICATION_FAILURE_REDIRECT_URI', '/fail')
+    def test_raises_if_the_response_type_is_not_supported(
+            self, mocked_login, mocked_authenticate, client):
+        oidc_rp_settings.RESPONSE_TYPE = "incorrect"
+        user = User.objects.create_user('foo')
+        mocked_authenticate.return_value = user
+        session = client.session
+        session['oidc_auth_state'] = 'dummystate'
+        session['oidc_auth_nonce'] = 'dummynonce'
+        session.save()
+        url = reverse('oidc_rp:oidc_auth_callback')
+
+        with pytest.raises(ImproperlyConfigured):
+            client.get(url, {'state': 'dummystate', 'code': 'dummycode'})
+
         assert not mocked_authenticate.call_count
         assert not mocked_login.call_count
 
