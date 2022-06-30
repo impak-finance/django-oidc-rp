@@ -13,7 +13,7 @@ import hashlib
 import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation, ImproperlyConfigured
 from django.db import transaction
 from django.urls import reverse
 from django.utils.encoding import force_bytes, smart_text
@@ -47,42 +47,53 @@ class OIDCAuthBackend(ModelBackend):
         state = request.GET.get('state')
         code = request.GET.get('code')
 
-        # Don't go further if the state value or the authorization code is not present in the GET
-        # parameters because we won't be able to get a valid token for the user in that case.
-        if (state is None and oidc_rp_settings.USE_STATE) or code is None:
-            raise SuspiciousOperation('Authorization code or state value is missing')
+        if oidc_rp_settings.RESPONSE_TYPE == "code":
+            # Don't go further if the state value or the authorization code is not present in the GET
+            # parameters because we won't be able to get a valid token for the user in that case.
+            if (state is None and oidc_rp_settings.USE_STATE) or code is None:
+                raise SuspiciousOperation('Authorization code or state value is missing')
 
-        # Prepares the token payload that will be used to request an authentication token to the
-        # token endpoint of the OIDC provider.
-        token_payload = {
-            'client_id': oidc_rp_settings.CLIENT_ID,
-            'client_secret': oidc_rp_settings.CLIENT_SECRET,
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': request.build_absolute_uri(
-                reverse('oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace)
-            ),
-        }
+            # Prepares the token payload that will be used to request an authentication token to the
+            # token endpoint of the OIDC provider.
+            token_payload = {
+                'client_id': oidc_rp_settings.CLIENT_ID,
+                'client_secret': oidc_rp_settings.CLIENT_SECRET,
+                'grant_type': 'authorization_code',
+                'code': code,
+                'redirect_uri': request.build_absolute_uri(reverse(
+                    'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
+                )),
+            }
 
-        # Calls the token endpoint.
-        token_response = requests.post(oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload)
-        token_response.raise_for_status()
-        token_response_data = token_response.json()
+            # Calls the token endpoint.
+            token_response = requests.post(
+                oidc_rp_settings.PROVIDER_TOKEN_ENDPOINT, data=token_payload
+            )
+            token_response.raise_for_status()
+            token_response_data = token_response.json()
 
-        # Validates the token.
-        raw_id_token = token_response_data.get('id_token')
-        id_token = validate_and_return_id_token(raw_id_token, nonce)
-        if id_token is None:
-            return
+            # Validates the token.
+            raw_id_token = token_response_data.get('id_token')
+            id_token = validate_and_return_id_token(raw_id_token, nonce)
+            if id_token is None:
+                return
 
-        # Retrieves the access token and refresh token.
-        access_token = token_response_data.get('access_token')
-        refresh_token = token_response_data.get('refresh_token')
+            # Retrieves the access token and refresh token.
+            access_token = token_response_data.get('access_token')
+            refresh_token = token_response_data.get('refresh_token')
 
-        # Stores the ID token, the related access token and the refresh token in the session.
-        request.session['oidc_auth_id_token'] = raw_id_token
-        request.session['oidc_auth_access_token'] = access_token
-        request.session['oidc_auth_refresh_token'] = refresh_token
+            # Stores the ID token, the related access token and the refresh token in the session.
+            request.session['oidc_auth_id_token'] = raw_id_token
+            request.session['oidc_auth_access_token'] = access_token
+            request.session['oidc_auth_refresh_token'] = refresh_token
+
+        elif oidc_rp_settings.RESPONSE_TYPE == "token":
+            access_token = request.GET.get('access_token')
+            id_token = {}
+            request.session['oidc_auth_access_token'] = access_token
+
+        else:
+            raise ImproperlyConfigured("Unsupported response type")
 
         # If the id_token contains userinfo scopes and claims we don't have to hit the userinfo
         # endpoint.
@@ -97,7 +108,7 @@ class OIDCAuthBackend(ModelBackend):
             userinfo_data = userinfo_response.json()
 
         # Tries to retrieve a corresponding user in the local database and creates it if applicable.
-        id_provider = id_token.get("iss")
+        id_provider = id_token.get("iss", oidc_rp_settings.PROVIDER_ENDPOINT)
         try:
             oidc_user = OIDCUser.objects.select_related('user').get(
                 sub=userinfo_data.get('sub'), iss=id_provider

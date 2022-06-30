@@ -8,7 +8,7 @@ import httpretty
 import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation, ImproperlyConfigured
 from django.core.handlers.wsgi import WSGIRequest
 from django.urls import resolve
 from jwkest.jwk import KEYS, RSAKey
@@ -32,6 +32,9 @@ def set_users_as_staff_members(oidc_user, claims):
 class TestOIDCAuthBackend:
     @pytest.fixture(autouse=True)
     def setup(self):
+        self.old_response_type = oidc_rp_settings.RESPONSE_TYPE
+        oidc_rp_settings.RESPONSE_TYPE = "code"
+
         httpretty.enable()
 
         self.key = RSAKey(kid='testkey').load(os.path.join(FIXTURE_ROOT, 'testkey.pem'))
@@ -55,6 +58,9 @@ class TestOIDCAuthBackend:
         yield
 
         httpretty.disable()
+
+    def teardown(self):
+        oidc_rp_settings.RESPONSE_TYPE = self.old_response_type
 
     def generate_jws(self, **kwargs):
         return JWS(self.generate_jws_dict(**kwargs), jwk=self.key, alg='RS256').sign_compact()
@@ -163,6 +169,19 @@ class TestOIDCAuthBackend:
         assert user.oidc_users.count() == 1
         assert user.oidc_users.first().sub == '1234'
 
+    def test_can_authenticate_a_user_with_token_flow(self, rf):
+        oidc_rp_settings.RESPONSE_TYPE = "token"
+        request = rf.get('/oidc/cb/', {'state': 'state', 'access_token': 'accesstoken'})
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate(request, 'nonce')
+        assert user.email == 'test@example.com'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+
     def test_cannot_authenticate_a_user_if_the_nonce_is_not_provided_and_if_it_is_mandatory(
             self, rf):
         request = rf.get('/oidc/cb/', {'code': 'authcode', })
@@ -219,6 +238,16 @@ class TestOIDCAuthBackend:
         request.session.save()
         backend = OIDCAuthBackend()
         assert backend.authenticate(request, 'nonce') is None
+
+    def test_cannot_authenticate_a_user_with_unsupported_response_type(self, rf):
+        oidc_rp_settings.RESPONSE_TYPE = "incorrect"
+        request = rf.get('/oidc/cb/', {})
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        with pytest.raises(ImproperlyConfigured):
+            backend.authenticate(request, 'nonce')
 
     @unittest.mock.patch('oidc_rp.conf.settings.USER_DETAILS_HANDLER',
                          'tests.unit.test_backends.set_users_as_staff_members')

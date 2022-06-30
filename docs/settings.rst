@@ -35,7 +35,7 @@ Optional settings
 ``OIDC_RP_PROVIDER_AUTHORIZATION_ENDPOINT``
 -------------------------------------------
 
-This setting defines the authorization endpoint URL of the OIDC provider. Unless explicitely
+This setting defines the authorization endpoint URL of the OIDC provider. Unless explicitly
 defined, it is automatically generated from the ``OIDC_RP_PROVIDER_ENDPOINT`` setting.
 
 Default: ``<OIDC_RP_PROVIDER_ENDPOINT>/authorize``
@@ -43,7 +43,7 @@ Default: ``<OIDC_RP_PROVIDER_ENDPOINT>/authorize``
 ``OIDC_RP_PROVIDER_TOKEN_ENDPOINT``
 -----------------------------------
 
-This setting defines the token endpoint URL of the OIDC provider. Unless explicitely defined, it is
+This setting defines the token endpoint URL of the OIDC provider. Unless explicitly defined, it is
 automatically generated from the ``OIDC_RP_PROVIDER_ENDPOINT`` setting.
 
 Default: ``<OIDC_RP_PROVIDER_ENDPOINT>/token``
@@ -52,7 +52,7 @@ Default: ``<OIDC_RP_PROVIDER_ENDPOINT>/token``
 ----------------------------------
 
 This setting defines the JWKs endpoint URL of the OIDC provider. This endpoint can be provided by
-the OIDC provider to expose its JWK Set. Unless explicitely defined, it is automatically generated
+the OIDC provider to expose its JWK Set. Unless explicitly defined, it is automatically generated
 from the ``OIDC_RP_PROVIDER_ENDPOINT`` setting.
 
 Default: ``<OIDC_RP_PROVIDER_ENDPOINT>/jwks``
@@ -76,8 +76,8 @@ Default: ``None``
 
 .. note::
 
-    The end-session endpoint is usefull it is necessary to ensure that a logout initiated from the
-    relying partu also ends the session at the OIDC provider level. This process is explained in
+    The end-session endpoint is useful it is necessary to ensure that a logout initiated from the
+    relying party also ends the session at the OIDC provider level. This process is explained in
     details in the
     `OpenID Connect Session Management 1.0 <https://openid.net/specs/openid-connect-session-1_0.html>`_
     specification.
@@ -139,6 +139,14 @@ Default: ``32``
 This setting defines the OpenID Connect scopes to request during authentication.
 
 Default: ``openid email``
+
+``OIDC_RP_RESPONSE_TYPE``
+_________________________
+
+This setting defines the response type which will be sent to the Identity Provider, which in turn determines the auth flow to use.
+Currently supported response types are ``code`` (OIDC Authentication Code Flow) and ``token`` (OAuth 2.0 Implicit Flow).
+
+Default: ``code``
 
 ``OIDC_RP_USE_NONCE``
 ---------------------
