@@ -19,8 +19,11 @@ from django.http import HttpResponseRedirect, QueryDict, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.http import is_safe_url, urlencode
 from django.views.generic import View
+
 
 from .conf import settings as oidc_rp_settings
 
@@ -75,6 +78,7 @@ class OIDCAuthRequestView(View):
         return HttpResponseRedirect(redirect_url)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class OIDCAuthCallbackView(View):
     """ Allows to complete the authentication process.
 
