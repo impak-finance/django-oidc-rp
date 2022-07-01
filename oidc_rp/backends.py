@@ -9,6 +9,7 @@
 
 import base64
 import hashlib
+import json
 
 import requests
 from django.contrib.auth import get_user_model
@@ -43,11 +44,11 @@ class OIDCAuthBackend(ModelBackend):
         if (nonce is None and oidc_rp_settings.USE_NONCE) or request is None:
             return
 
-        # Fetches required GET parameters from the HTTP request object.
-        state = request.GET.get('state')
-        code = request.GET.get('code')
-
         if oidc_rp_settings.RESPONSE_TYPE == "code":
+            # Fetches required GET parameters from the HTTP request object.
+            state = request.GET.get('state')
+            code = request.GET.get('code')
+
             # Don't go further if the state value or the authorization code is not present in the GET
             # parameters because we won't be able to get a valid token for the user in that case.
             if (state is None and oidc_rp_settings.USE_STATE) or code is None:
@@ -86,6 +87,18 @@ class OIDCAuthBackend(ModelBackend):
             request.session['oidc_auth_id_token'] = raw_id_token
             request.session['oidc_auth_access_token'] = access_token
             request.session['oidc_auth_refresh_token'] = refresh_token
+
+        elif oidc_rp_settings.RESPONSE_TYPE == "id_token token":
+            body_params = json.loads(request.body)
+            raw_id_token = body_params.get('id_token')
+            access_token = body_params.get('access_token')
+
+            id_token = validate_and_return_id_token(raw_id_token, nonce, access_token=access_token)
+            if id_token is None:
+                return
+
+            request.session['oidc_auth_id_token'] = raw_id_token
+            request.session['oidc_auth_access_token'] = access_token
 
         elif oidc_rp_settings.RESPONSE_TYPE == "token":
             access_token = request.GET.get('access_token')

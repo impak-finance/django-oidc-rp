@@ -9,12 +9,14 @@
 
 """
 
+import json
 import time
 
 from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation, ImproperlyConfigured
-from django.http import HttpResponseRedirect, QueryDict
+from django.http import HttpResponseRedirect, QueryDict, JsonResponse
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.http import is_safe_url, urlencode
@@ -78,17 +80,41 @@ class OIDCAuthCallbackView(View):
 
     This view acts as the main endpoint to complete the authentication process involving the OIDC
     provider (OP). It checks the request sent by the OIDC provider in order to determine whether the
-    considered was successfully authentified or not and authenticates the user at the current
+    considered was successfully authenticated or not and authenticates the user at the current
     application level if applicable.
 
     """
 
-    http_method_names = ['get', ]
+    http_method_names = ['get', 'post']
 
     def get(self, request):
         """ Processes GET requests. """
         callback_params = request.GET
 
+        if oidc_rp_settings.RESPONSE_TYPE in ["token", "id_token token"]:
+            # Implicit flow sends response in URL fragment and needs to be parsed by JS
+            context = {
+                "success_redirect_url": oidc_rp_settings.AUTHENTICATION_REDIRECT_URI,
+                "failure_redirect_url": oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI,
+            }
+            return render(request, "implicit_login.html", context)
+
+        result = self._handle(request, callback_params)
+        if result["status"] == "success":
+            return HttpResponseRedirect(
+                result["next_url"] or oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
+
+        return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
+
+    def post(self, request):
+        callback_params = json.loads(request.body)
+        response_data = self._handle(request, callback_params)
+        if response_data["status"] == "success":
+            return JsonResponse(response_data)
+
+        return JsonResponse(response_data, status=500)
+
+    def _handle(self, request, callback_params):
         # Retrieve the state value that was previously generated. No state means that we cannot
         # authenticate the user (so a failure should be returned).
         state = request.session.get('oidc_auth_state', None)
@@ -98,16 +124,22 @@ class OIDCAuthCallbackView(View):
         # authentication cannot be performed and so we have redirect the user to a failure URL.
         nonce = request.session.pop('oidc_auth_nonce', None)
 
-        if oidc_rp_settings.RESPONSE_TYPE == "code":
-            has_required_params = 'code' in callback_params
-        elif oidc_rp_settings.RESPONSE_TYPE == "token":
-            has_required_params = 'access_token' in callback_params
-        else:
+        required_params = []
+
+        if "code" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('code')
+        if "id_token" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('id_token')
+        if "token" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('access_token')
+
+        if len(required_params) == 0:
             raise ImproperlyConfigured("Unsupported response type")
 
         # NOTE: a redirect to the failure page should be return if some required GET parameters are
         # missing or if no state can be retrieved from the current session.
 
+        has_required_params = all([param in callback_params for param in required_params])
         if (
             ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and
             ((state and oidc_rp_settings.USE_STATE) or not oidc_rp_settings.USE_STATE) and
@@ -134,8 +166,7 @@ class OIDCAuthCallbackView(View):
                 self.request.session['oidc_auth_session_state'] = \
                     callback_params.get('session_state', None)
 
-                return HttpResponseRedirect(
-                    next_url or oidc_rp_settings.AUTHENTICATION_REDIRECT_URI)
+                return {"status": "success", "next_url": next_url}
 
         if 'error' in callback_params:
             # If we receive an error in the callback GET parameters, this means that the
@@ -144,7 +175,7 @@ class OIDCAuthCallbackView(View):
             # OpenID Connect Provider authenticate endpoint.
             auth.logout(request)
 
-        return HttpResponseRedirect(oidc_rp_settings.AUTHENTICATION_FAILURE_REDIRECT_URI)
+        return {"status": "failure"}
 
 
 class OIDCEndSessionView(View):
