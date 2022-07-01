@@ -87,6 +87,17 @@ class OIDCAuthBackend(ModelBackend):
             request.session['oidc_auth_access_token'] = access_token
             request.session['oidc_auth_refresh_token'] = refresh_token
 
+        elif oidc_rp_settings.RESPONSE_TYPE == "id_token token":
+            raw_id_token = request.GET.get('id_token')
+            access_token = request.GET.get('access_token')
+
+            id_token = validate_and_return_id_token(raw_id_token, nonce, access_token=access_token)
+            if id_token is None:
+                return
+
+            request.session['oidc_auth_id_token'] = raw_id_token
+            request.session['oidc_auth_access_token'] = access_token
+
         elif oidc_rp_settings.RESPONSE_TYPE == "token":
             access_token = request.GET.get('access_token')
             id_token = {}

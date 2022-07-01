@@ -98,16 +98,22 @@ class OIDCAuthCallbackView(View):
         # authentication cannot be performed and so we have redirect the user to a failure URL.
         nonce = request.session.pop('oidc_auth_nonce', None)
 
-        if oidc_rp_settings.RESPONSE_TYPE == "code":
-            has_required_params = 'code' in callback_params
-        elif oidc_rp_settings.RESPONSE_TYPE == "token":
-            has_required_params = 'access_token' in callback_params
-        else:
+        required_params = []
+
+        if "code" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('code')
+        if "id_token" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('id_token')
+        if "token" in oidc_rp_settings.RESPONSE_TYPE:
+            required_params.append('access_token')
+
+        if len(required_params) == 0:
             raise ImproperlyConfigured("Unsupported response type")
 
         # NOTE: a redirect to the failure page should be return if some required GET parameters are
         # missing or if no state can be retrieved from the current session.
 
+        has_required_params = all([param in callback_params for param in required_params])
         if (
             ((nonce and oidc_rp_settings.USE_NONCE) or not oidc_rp_settings.USE_NONCE) and
             ((state and oidc_rp_settings.USE_STATE) or not oidc_rp_settings.USE_STATE) and

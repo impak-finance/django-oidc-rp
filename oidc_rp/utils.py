@@ -6,12 +6,14 @@
 
 """
 
+import base64
 import datetime as dt
 from calendar import timegm
 from urllib.parse import urlparse
+from hashlib import sha256
 
 from django.core.exceptions import SuspiciousOperation
-from django.utils.encoding import force_bytes, smart_bytes
+from django.utils.encoding import force_bytes, smart_bytes, smart_text
 from jwkest import JWKESTException
 from jwkest.jwk import KEYS
 from jwkest.jws import JWS
@@ -19,7 +21,7 @@ from jwkest.jws import JWS
 from .conf import settings as oidc_rp_settings
 
 
-def validate_and_return_id_token(jws, nonce=None, validate_nonce=True):
+def validate_and_return_id_token(jws, nonce=None, validate_nonce=True, access_token=None):
     """ Validates the id_token according to the OpenID Connect specification. """
     shared_key = oidc_rp_settings.CLIENT_SECRET \
         if oidc_rp_settings.PROVIDER_SIGNATURE_ALG == 'HS256' \
@@ -32,7 +34,7 @@ def validate_and_return_id_token(jws, nonce=None, validate_nonce=True):
         return
 
     # Validates the claims embedded in the id_token.
-    _validate_claims(id_token, nonce=nonce, validate_nonce=validate_nonce)
+    _validate_claims(id_token, nonce=nonce, validate_nonce=validate_nonce, access_token=access_token)
 
     return id_token
 
@@ -50,7 +52,16 @@ def _get_jwks_keys(shared_key):
     return jwks_keys
 
 
-def _validate_claims(id_token, nonce=None, validate_nonce=True):
+def _hash_access_token(access_token):
+    full_hash = sha256(force_bytes(access_token))
+    digest = full_hash.digest()
+
+    hash_left_side = digest[:int((len(digest)/2))]
+    hash_encoded = base64.urlsafe_b64encode(hash_left_side)
+    return smart_text(hash_encoded)
+
+
+def _validate_claims(id_token, nonce=None, validate_nonce=True, access_token=None, alg=None):
     """ Validates the claims embedded in the JSON Web Token. """
     iss_parsed_url = urlparse(id_token['iss'])
     provider_parsed_url = urlparse(oidc_rp_settings.PROVIDER_ENDPOINT)
@@ -84,3 +95,9 @@ def _validate_claims(id_token, nonce=None, validate_nonce=True):
     id_token_nonce = id_token.get('nonce', None)
     if validate_nonce and oidc_rp_settings.USE_NONCE and id_token_nonce != nonce:
         raise SuspiciousOperation('Incorrect id_token: nonce')
+
+    if access_token:
+        id_token_at_hash = id_token.get('at_hash', None)
+        at_hash = _hash_access_token(access_token)
+        if id_token_at_hash != at_hash.rstrip('='):
+            raise SuspiciousOperation('Incorrect id_token: at_hash')
