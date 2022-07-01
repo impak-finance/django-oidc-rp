@@ -2,6 +2,7 @@ include LICENSE
 include MANIFEST.in
 include *.md
 include *.rst
+recursive-include oidc_rp/templates *.html
 global-exclude *.pyc
 global-exclude __pycache__
 recursive-exclude tests *
