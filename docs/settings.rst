@@ -144,7 +144,7 @@ Default: ``openid email``
 _________________________
 
 This setting defines the response type which will be sent to the Identity Provider, which in turn determines the auth flow to use.
-Currently supported response types are ``code`` (OIDC Authentication Code Flow) and ``token`` (OAuth 2.0 Implicit Flow).
+Currently supported response types are ``code`` (OIDC Authentication Code Flow), ``id_token token`` (OIDC Implicit Flow) and ``token`` (OAuth 2.0 Implicit Flow).
 
 Default: ``code``
 
@@ -152,7 +152,7 @@ Default: ``code``
 ---------------------
 
 This setting defines whether or not nonces should be used when forging authorization requests.
-Nonces are used to mitigate replay attacks.
+Nonces are used to mitigate replay attacks. This should always be set to True when using the implicit flow!
 
 Default: ``True``
 
