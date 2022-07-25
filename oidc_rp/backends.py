@@ -174,7 +174,7 @@ def get_or_create_user(username, email):
 def create_oidc_user_from_claims(claims, id_provider=None):
     """ Creates an ``OIDCUser`` instance using the claims extracted from an id_token. """
     sub = claims['sub']
-    email = claims.get('email')
+    email = claims.get(oidc_rp_settings.USERINFO_EMAIL_KEY)
     username = base64.urlsafe_b64encode(hashlib.sha1(force_bytes(sub)).digest()).rstrip(b'=')
     user = get_or_create_user(username, email)
     if hasattr(user, 'oidc_users'):
@@ -200,5 +200,5 @@ def update_oidc_user_from_claims(oidc_user, claims, id_provider=None):
     if id_provider:
         oidc_user.iss = id_provider
     oidc_user.save()
-    oidc_user.user.email = claims.get('email')
+    oidc_user.user.email = claims.get(oidc_rp_settings.USERINFO_EMAIL_KEY)
     oidc_user.user.save()

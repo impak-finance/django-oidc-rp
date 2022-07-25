@@ -205,6 +205,14 @@ creating whatever is necessary to manage the user later on.
 
 Default: ``None``
 
+``OIDC_RP_USERINFO_EMAIL_KEY``
+--------------------------------
+
+This setting allows specifying which key should be used to look up user email in the
+userinfo response, in case it's different than the standard.
+
+Default: ``email``
+
 ``OIDC_RP_UNAUTHENTICATED_SESSION_MANAGEMENT_KEY``
 --------------------------------------------------
 
