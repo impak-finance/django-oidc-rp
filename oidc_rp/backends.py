@@ -54,6 +54,12 @@ class OIDCAuthBackend(ModelBackend):
             if (state is None and oidc_rp_settings.USE_STATE) or code is None:
                 raise SuspiciousOperation('Authorization code or state value is missing')
 
+            redirect_uri = request.build_absolute_uri(reverse(
+                'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
+            ))
+            if getattr(oidc_rp_settings, 'FORCE_REDIRECT_URI_HTTPS', False):
+                redirect_uri = redirect_uri.replace('http://', 'https://')
+
             # Prepares the token payload that will be used to request an authentication token to the
             # token endpoint of the OIDC provider.
             token_payload = {
@@ -61,9 +67,7 @@ class OIDCAuthBackend(ModelBackend):
                 'client_secret': oidc_rp_settings.CLIENT_SECRET,
                 'grant_type': 'authorization_code',
                 'code': code,
-                'redirect_uri': request.build_absolute_uri(reverse(
-                    'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
-                )),
+                'redirect_uri': redirect_uri
             }
 
             # Calls the token endpoint.

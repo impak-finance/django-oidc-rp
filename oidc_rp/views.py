@@ -43,13 +43,18 @@ class OIDCAuthRequestView(View):
         """ Processes GET requests. """
         # Defines common parameters used to bootstrap the authentication request.
         authentication_request_params = request.GET.dict()
+
+        redirect_uri = request.build_absolute_uri(reverse(
+            'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
+        ))
+        if getattr(oidc_rp_settings, 'FORCE_REDIRECT_URI_HTTPS', False):
+            redirect_uri = redirect_uri.replace('http://', 'https://')
+
         authentication_request_params.update({
             'scope': oidc_rp_settings.SCOPES,
             'response_type': oidc_rp_settings.RESPONSE_TYPE,
             'client_id': oidc_rp_settings.CLIENT_ID,
-            'redirect_uri': request.build_absolute_uri(reverse(
-                'oidc_rp:oidc_auth_callback', current_app=request.resolver_match.namespace
-            )),
+            'redirect_uri': redirect_uri,
         })
 
         # States should be used! They are recommended in order to maintain state between the
