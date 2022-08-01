@@ -105,7 +105,8 @@ class OIDCAuthBackend(ModelBackend):
             request.session['oidc_auth_access_token'] = access_token
 
         elif oidc_rp_settings.RESPONSE_TYPE == "token":
-            access_token = request.GET.get('access_token')
+            body_params = json.loads(request.body)
+            access_token = body_params.get('access_token')
             id_token = {}
             request.session['oidc_auth_access_token'] = access_token
 

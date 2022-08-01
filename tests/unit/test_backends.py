@@ -123,6 +123,7 @@ class TestOIDCAuthBackend:
         assert user.oidc_users.count() == 1
         assert user.oidc_users.first().sub == '1234'
         assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+        assert False
 
     def test_can_authenticate_an_existing_user_with_different_provider(self, rf):
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
@@ -171,7 +172,27 @@ class TestOIDCAuthBackend:
 
     def test_can_authenticate_a_user_with_token_flow(self, rf):
         oidc_rp_settings.RESPONSE_TYPE = "token"
-        request = rf.get('/oidc/cb/', {'state': 'state', 'access_token': 'accesstoken'})
+        request = rf.post(
+            '/oidc/cb/', {'state': 'state', 'access_token': 'accesstoken'}, content_type='application/json'
+        )
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        user = backend.authenticate(request, 'nonce')
+        assert user.email == 'test@example.com'
+        assert user.oidc_users.count() == 1
+        assert user.oidc_users.first().sub == '1234'
+        assert user.oidc_users.first().iss == oidc_rp_settings.PROVIDER_ENDPOINT
+
+    def test_can_authenticate_a_user_with_oidc_implicit_flow(self, rf):
+        oidc_rp_settings.RESPONSE_TYPE = "id_token token"
+        id_token = self.generate_jws(at_hash="IWbUdP6sROHIAd085N_3jg")
+        request = rf.post(
+            '/oidc/cb/',
+            {'state': 'state', 'access_token': 'accesstoken', 'id_token': id_token},
+            content_type='application/json'
+        )
         request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()
@@ -233,6 +254,19 @@ class TestOIDCAuthBackend:
                 'refresh_token': 'refreshtoken', }),
             content_type='text/json')
         request = rf.get('/oidc/cb/', {'state': 'state', 'code': 'authcode', })
+        request.resolver_match = resolve('/oidc/auth/cb/')
+        SessionMiddleware().process_request(request)
+        request.session.save()
+        backend = OIDCAuthBackend()
+        assert backend.authenticate(request, 'nonce') is None
+
+    def test_cannot_authenticate_a_user_in_implicit_flow_if_the_id_token_validation_fails(self, rf):
+        oidc_rp_settings.RESPONSE_TYPE = "id_token token"
+        request = rf.post(
+            '/oidc/cb/',
+            {'state': 'state', 'access_token': 'accesstoken', 'id_token': 'badidtoken'},
+            content_type='application/json'
+        )
         request.resolver_match = resolve('/oidc/auth/cb/')
         SessionMiddleware().process_request(request)
         request.session.save()

@@ -56,7 +56,7 @@ def _hash_access_token(access_token):
     full_hash = sha256(force_bytes(access_token))
     digest = full_hash.digest()
 
-    hash_left_side = digest[:int((len(digest)/2))]
+    hash_left_side = digest[:int(len(digest)/2)]
     hash_encoded = base64.urlsafe_b64encode(hash_left_side)
     return smart_text(hash_encoded)
 

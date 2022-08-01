@@ -139,3 +139,17 @@ class TestValidateAndReturnIDTokenUtility:
         jws = self.generate_jws(nonce='invalidnonce')
         with pytest.raises(SuspiciousOperation):
             validate_and_return_id_token(jws)
+
+    @unittest.mock.patch('oidc_rp.conf.settings.CLIENT_ID', 'client_id')
+    @unittest.mock.patch('oidc_rp.conf.settings.CLIENT_SECRET', 'client_secret')
+    def test_cannot_validate_an_id_token_with_access_token_and_no_at_hash(self):
+        jws = self.generate_jws()
+        with pytest.raises(SuspiciousOperation):
+            validate_and_return_id_token(jws, 'nonce', access_token="accesstoken")
+
+    @unittest.mock.patch('oidc_rp.conf.settings.CLIENT_ID', 'client_id')
+    @unittest.mock.patch('oidc_rp.conf.settings.CLIENT_SECRET', 'client_secret')
+    def test_cannot_validate_an_id_token_with_access_token_and_incorrect_at_hash(self):
+        jws = self.generate_jws(at_hash='incorrect_hash')
+        with pytest.raises(SuspiciousOperation):
+            validate_and_return_id_token(jws, 'nonce', access_token="accesstoken")
