@@ -135,7 +135,7 @@ class OIDCAuthBackend(ModelBackend):
             oidc_user = self.create_oidc_user_from_claims(userinfo_data, id_provider)
             oidc_user_created.send(sender=self.__class__, request=request, oidc_user=oidc_user)
         else:
-            update_oidc_user_from_claims(oidc_user, userinfo_data)
+            self.update_oidc_user_from_claims(oidc_user, userinfo_data)
 
         # Runs a custom user details handler if applicable. Such handler could be responsible for
         # creating / updating whatever is necessary to manage the considered user (eg. a profile).
@@ -148,6 +148,9 @@ class OIDCAuthBackend(ModelBackend):
 
     def create_oidc_user_from_claims(self, claims, id_provider=None):
         return create_oidc_user_from_claims(claims, id_provider)
+
+    def update_oidc_user_from_claims(self, oidc_user, claims, id_provider=None):
+        return update_oidc_user_from_claims(oidc_user, claims, id_provider)
 
 
 def get_or_create_user(username, email):
